@@ -1,0 +1,4 @@
+[submodule "3rdparty/kiwi"]
+	path = 3rdparty/kiwi
+	url = https://github.com/nucleic/kiwi
+
