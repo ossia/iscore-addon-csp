@@ -37,7 +37,7 @@ set(SRCS
 )
 
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(${PROJECT_NAME} PUBLIC
                         Qt5::Core
                         iscore_lib_base iscore_lib_process iscore_plugin_scenario)
 
