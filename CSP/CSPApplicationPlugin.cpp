@@ -6,6 +6,8 @@
 #include <core/document/DocumentModel.hpp>
 #include <Scenario/Document/Constraint/Rack/RackModel.hpp>
 
+namespace CSP
+{
 CSPApplicationPlugin::CSPApplicationPlugin(const iscore::ApplicationContext& pres) :
     iscore::GUIApplicationContextPlugin {pres, "CSPApplicationPlugin", nullptr}
 {
@@ -40,4 +42,5 @@ CSPApplicationPlugin::on_loadedDocument(iscore::Document* document)
     {
         on_newDocument(document);
     }
+}
 }

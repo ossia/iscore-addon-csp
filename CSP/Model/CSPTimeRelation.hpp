@@ -8,12 +8,15 @@
 
 #include <CSP/Model/CSPScenario.hpp>
 
-class CSPDisplacementPolicy;
 
 namespace Scenario
 {
 class ConstraintModel;
 }
+
+namespace CSP
+{
+class CSPDisplacementPolicy;
 class CSPTimeRelation : public CSPConstraintHolder, public Nano::Observer
 {
     friend class CSPDisplacementPolicy;
@@ -62,3 +65,4 @@ private:
 
     QHash<Id<Process::ProcessModel>, CSPScenario*> m_subScenarios;
 };
+}

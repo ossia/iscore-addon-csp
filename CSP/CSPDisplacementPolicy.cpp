@@ -10,6 +10,8 @@
 #define STAY_TNODE_STRENGTH kiwi::strength::medium
 #define STAY_DRAGGED_TNODE_STRENGTH kiwi::strength::strong + 1.0 //not so sure that its working
 
+namespace CSP
+{
 CSPDisplacementPolicy::CSPDisplacementPolicy(
         Scenario::ScenarioModel& scenario,
         const QVector<Id<Scenario::TimeNodeModel>>& draggedElements)
@@ -203,4 +205,5 @@ void CSPDisplacementPolicy::refreshStays(
         // - add new stays
         curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), STAY_TNODE_STRENGTH));
     }
+}
 }

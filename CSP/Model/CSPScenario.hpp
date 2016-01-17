@@ -7,8 +7,6 @@
 
 #include <kiwi/kiwi.h>
 
-class CSPTimeNode;
-class CSPTimeRelation;
 
 namespace Scenario
 {
@@ -21,6 +19,10 @@ class ScenarioInterface;
 class BaseScenario;
 }
 
+namespace CSP
+{
+class CSPTimeNode;
+class CSPTimeRelation;
 class CSPScenario : public QObject, public Nano::Observer
 {
     friend class CSPDisplacementPolicy;
@@ -79,3 +81,4 @@ private:
 
     kiwi::Solver m_solver{};
 };
+}

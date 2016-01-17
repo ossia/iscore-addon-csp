@@ -9,6 +9,9 @@ class DocumentModel;
 }
 
 class OSSIABaseScenarioElement;
+
+namespace CSP
+{
 class CSPDocumentPlugin : public iscore::DocumentPluginModel
 {
         Q_OBJECT
@@ -22,3 +25,4 @@ class CSPDocumentPlugin : public iscore::DocumentPluginModel
     private:
         CSPScenario* m_cspScenario;
 };
+}

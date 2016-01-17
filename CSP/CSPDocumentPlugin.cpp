@@ -5,6 +5,8 @@
 #include <core/document/Document.hpp>
 #include <core/document/DocumentModel.hpp>
 
+namespace CSP
+{
 CSPDocumentPlugin::CSPDocumentPlugin(iscore::Document& doc, QObject* parent):
     iscore::DocumentPluginModel{doc, "CSPDocumentPlugin", parent}
 {
@@ -24,4 +26,5 @@ void CSPDocumentPlugin::reload(iscore::DocumentModel& document)
 CSPScenario* CSPDocumentPlugin::getScenario() const
 {
     return m_cspScenario;
+}
 }

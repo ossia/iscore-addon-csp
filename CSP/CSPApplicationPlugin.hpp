@@ -2,6 +2,8 @@
 #include <iscore/plugins/application/GUIApplicationContextPlugin.hpp>
 #include <iscore/plugins/documentdelegate/plugin/DocumentDelegatePluginModel.hpp>
 
+namespace CSP
+{
 class CSPApplicationPlugin final : public iscore::GUIApplicationContextPlugin
 {
     public:
@@ -23,3 +25,4 @@ class CSPApplicationPlugin final : public iscore::GUIApplicationContextPlugin
 
     private:
 };
+}

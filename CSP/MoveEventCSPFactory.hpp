@@ -3,7 +3,8 @@
 #include <Scenario/Commands/Scenario/Displacement/MoveEventFactoryInterface.hpp>
 #include <Scenario/Commands/Scenario/Displacement/MoveEventList.hpp>
 
-
+namespace CSP
+{
 class MoveEventCSPFactory : public Scenario::Command::MoveEventFactoryInterface
 {
         // MoveEventFactory interface
@@ -31,3 +32,4 @@ class MoveEventCSPFactory : public Scenario::Command::MoveEventFactoryInterface
 
         const Scenario::Command::MoveEventFactoryKey& key_impl() const override;
 };
+}

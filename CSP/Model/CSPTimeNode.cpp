@@ -4,6 +4,8 @@
 #include <kiwi/kiwi.h>
 #include <Scenario/Process/ScenarioInterface.hpp>
 
+namespace CSP
+{
 
 CSPTimeNode::CSPTimeNode(
         CSPScenario& cspScenario,
@@ -50,4 +52,6 @@ bool CSPTimeNode::dateChanged() const
 void CSPTimeNode::onDateChanged(const TimeValue& date)
 {
     m_date.setValue(date.msec());
+}
+
 }

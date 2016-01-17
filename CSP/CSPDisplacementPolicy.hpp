@@ -4,6 +4,8 @@
 #include <Scenario/Tools/dataStructures.hpp>
 #include <Scenario/Process/Algorithms/StandardDisplacementPolicy.hpp>
 
+namespace CSP
+{
 class CSPScenario;
 
 class CSPDisplacementPolicy
@@ -41,3 +43,4 @@ public:
 protected:
     static void refreshStays(CSPScenario& cspScenario, const QVector<Id<Scenario::TimeNodeModel> >& draggedElements);
 };
+}

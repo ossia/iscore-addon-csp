@@ -10,6 +10,8 @@
     m_solver.addConstraint(*constraintName);\
     m_constraints.push_back(constraintName)
 
+namespace CSP
+{
 class CSPConstraintHolder : public QObject
 {
 public:
@@ -59,3 +61,4 @@ protected:
 
     kiwi::Solver& m_solver;
 };
+}

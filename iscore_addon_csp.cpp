@@ -13,7 +13,7 @@ iscore_addon_csp::iscore_addon_csp() :
 iscore::GUIApplicationContextPlugin* iscore_addon_csp::make_applicationPlugin(
         const iscore::ApplicationContext& app)
 {
-    return new CSPApplicationPlugin{app};
+    return new CSP::CSPApplicationPlugin{app};
 }
 
 std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>>
@@ -25,8 +25,8 @@ iscore_addon_csp::factories(
             iscore::ApplicationContext,
     TL<
         FW<Scenario::Command::MoveEventFactoryInterface,
-            MoveEventCSPFactory,
-            MoveEventCSPFlexFactory>
+            CSP::MoveEventCSPFactory,
+            CSP::MoveEventCSPFlexFactory>
       >
     >(ctx, key);
 }

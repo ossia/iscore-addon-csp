@@ -7,6 +7,8 @@
 #include <kiwi/kiwi.h>
 #include <QtAlgorithms>
 
+namespace CSP
+{
 CSPScenario::CSPScenario(
         const Scenario::ScenarioModel& scenario,
         QObject *parent):
@@ -177,4 +179,5 @@ CSPScenario::getInsertTimenode(
     insertTimenode(timeNodeId);
 
     return *m_timeNodes[timeNodeId];
+}
 }

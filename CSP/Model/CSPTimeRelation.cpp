@@ -7,6 +7,8 @@
 #include <kiwi/kiwi.h>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 
+namespace CSP
+{
 CSPTimeRelation::CSPTimeRelation(
         CSPScenario& cspScenario,
         const Id<Scenario::ConstraintModel>& constraintId):
@@ -122,4 +124,5 @@ void CSPTimeRelation::onProcessRemoved(const Process::ProcessModel& process)
     {
         delete(m_subScenarios.take(scenario->id()));
     }
+}
 }

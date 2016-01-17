@@ -10,13 +10,15 @@
 
 #include "CSPScenario.hpp"
 
-class CSPDisplacementPolicy;
 
 namespace Scenario
 {
 class TimeNodeModel;
 }
 
+namespace CSP
+{
+class CSPDisplacementPolicy;
 class CSPTimeNode : public CSPConstraintHolder
 {
     friend class CSPDisplacementPolicy;
@@ -44,3 +46,4 @@ private:
 
     void onDateChanged(const TimeValue& date);
 };
+}

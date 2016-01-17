@@ -2,6 +2,8 @@
 #include <CSP/CSPFlexDisplacementPolicy.hpp>
 #include <Scenario/Commands/Scenario/Displacement/MoveEvent.hpp>
 
+namespace CSP
+{
 Scenario::Command::SerializableMoveEvent* MoveEventCSPFlexFactory::make(
         Path<Scenario::ScenarioModel> &&scenarioPath,
         const Id<Scenario::EventModel> &eventId,
@@ -21,4 +23,5 @@ const Scenario::Command::MoveEventFactoryKey& MoveEventCSPFlexFactory::key_impl(
     // TODO why is CSP CSPFlex and CSPFlex CSP
     static const Scenario::Command::MoveEventFactoryKey str{"CSP"};
     return str;
+}
 }
