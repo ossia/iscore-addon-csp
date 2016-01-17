@@ -5,19 +5,19 @@
 
 #include <iscore/plugins/customfactory/FactorySetup.hpp>
 
-iscore_plugin_csp::iscore_plugin_csp() :
+iscore_addon_csp::iscore_addon_csp() :
     QObject {}
 {
 }
 
-iscore::GUIApplicationContextPlugin* iscore_plugin_csp::make_applicationPlugin(
+iscore::GUIApplicationContextPlugin* iscore_addon_csp::make_applicationPlugin(
         const iscore::ApplicationContext& app)
 {
     return new CSPApplicationPlugin{app};
 }
 
 std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>>
-iscore_plugin_csp::factories(
+iscore_addon_csp::factories(
         const iscore::ApplicationContext& ctx,
         const iscore::FactoryBaseKey& key) const
 {
