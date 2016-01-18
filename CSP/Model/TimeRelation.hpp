@@ -17,7 +17,7 @@ class ConstraintModel;
 namespace CSP
 {
 class DisplacementPolicy;
-class TimeRelationModel : public CSPConstraintHolder, public Nano::Observer
+class TimeRelationModel : public ConstraintHolder, public Nano::Observer
 {
     friend class DisplacementPolicy;
     friend class FlexDisplacementPolicy;

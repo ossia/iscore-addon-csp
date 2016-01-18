@@ -10,9 +10,9 @@ namespace CSP
 TimeNodeModel::TimeNodeModel(
         ScenarioModel& cspScenario,
         const Id<Scenario::TimeNodeModel>& timeNodeId)
-    :CSPConstraintHolder::CSPConstraintHolder(cspScenario.getSolver(), &cspScenario)
+    :ConstraintHolder::ConstraintHolder(cspScenario.getSolver(), &cspScenario)
 {
-    auto& solver = cspScenario.getSolver();
+//    auto& solver = cspScenario.getSolver();
 
     this->setParent(&cspScenario);
     this->setObjectName("CSPTimeNode");

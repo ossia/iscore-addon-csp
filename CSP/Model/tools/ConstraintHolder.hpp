@@ -12,17 +12,17 @@
 
 namespace CSP
 {
-class CSPConstraintHolder : public QObject
+class ConstraintHolder : public QObject
 {
 public:
 
     using QObject::QObject;
-    CSPConstraintHolder(kiwi::Solver& solver, QObject* parent)
+    ConstraintHolder(kiwi::Solver& solver, QObject* parent)
         :QObject::QObject{parent},
           m_solver(solver)
     {}
 
-    virtual ~CSPConstraintHolder()
+    virtual ~ConstraintHolder()
     {
         removeAllConstraints();
     }

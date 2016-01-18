@@ -19,7 +19,7 @@ class TimeNodeModel;
 namespace CSP
 {
 class DisplacementPolicy;
-class TimeNodeModel : public CSPConstraintHolder
+class TimeNodeModel : public ConstraintHolder
 {
     friend class DisplacementPolicy;
     friend class FlexDisplacementPolicy;

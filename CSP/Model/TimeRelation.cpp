@@ -12,7 +12,7 @@ namespace CSP
 TimeRelationModel::TimeRelationModel(
         ScenarioModel& cspScenario,
         const Id<Scenario::ConstraintModel>& constraintId):
-    CSPConstraintHolder::CSPConstraintHolder(cspScenario.getSolver(), &cspScenario)
+    ConstraintHolder::ConstraintHolder(cspScenario.getSolver(), &cspScenario)
 {
     qDebug("coucou");
     this->setParent(&cspScenario);
