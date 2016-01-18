@@ -1,9 +1,8 @@
-#include <CSP/CSPDisplacementPolicy.hpp>
-#include <CSP/Model/CSPScenario.hpp>
-#include <CSP/Model/CSPTimeNode.hpp>
-#include <CSP/Model/CSPTimeRelation.hpp>
+#include <CSP/FlexDisplacementPolicy.hpp>
+#include <CSP/Model/Scenario.hpp>
+#include <CSP/Model/TimeNode.hpp>
+#include <CSP/Model/TimeRelation.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
-
 #define STAY_MINMAXFROMDATEONCREATION_STRENGTH kiwi::strength::required
 #define STAY_MINMAXPREVTIMERELATION_STRENGTH kiwi::strength::strong
 #define STAY_MINMAX_STRENGTH kiwi::strength::required
@@ -12,11 +11,11 @@
 
 namespace CSP
 {
-CSPDisplacementPolicy::CSPDisplacementPolicy(
+FlexDisplacementPolicy::FlexDisplacementPolicy(
         Scenario::ScenarioModel& scenario,
-        const QVector<Id<Scenario::TimeNodeModel>>& draggedElements)
+        const QVector<Id<Scenario::TimeNodeModel> >& draggedElements)
 {
-    if(CSPScenario* cspScenario = scenario.findChild<CSPScenario*>("CSPScenario", Qt::FindDirectChildrenOnly))
+    if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
     {
         // add stays to all elements
         refreshStays(*cspScenario, draggedElements);
@@ -28,7 +27,7 @@ CSPDisplacementPolicy::CSPDisplacementPolicy(
     }
 }
 
-void CSPDisplacementPolicy::computeDisplacement(
+void FlexDisplacementPolicy::computeDisplacement(
         Scenario::ScenarioModel& scenario,
         const QVector<Id<Scenario::TimeNodeModel>>& draggedElements,
         const TimeValue& deltaTime,
@@ -36,7 +35,7 @@ void CSPDisplacementPolicy::computeDisplacement(
 {
     // get the csp scenario
 
-    if(CSPScenario* cspScenario = scenario.findChild<CSPScenario*>("CSPScenario", Qt::FindDirectChildrenOnly))
+    if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
     {
         auto& solver = cspScenario->getSolver();
 
@@ -82,7 +81,7 @@ void CSPDisplacementPolicy::computeDisplacement(
         // look for changes // TODO : maybe find a more efficient way of doing that
 
         // - in timenodes :
-        QHashIterator<Id<Scenario::TimeNodeModel>, CSPTimeNode*> timeNodeIterator(cspScenario->m_timeNodes);
+        QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario->m_timeNodes);
         while (timeNodeIterator.hasNext())
         {
             timeNodeIterator.next();
@@ -106,7 +105,7 @@ void CSPDisplacementPolicy::computeDisplacement(
         }
 
         // - in time relations :
-        QHashIterator<Id<Scenario::ConstraintModel>, CSPTimeRelation*> timeRelationIterator(cspScenario->m_timeRelations);
+        QHashIterator<Id<Scenario::ConstraintModel>, TimeRelationModel*> timeRelationIterator(cspScenario->m_timeRelations);
         while(timeRelationIterator.hasNext())
         {
             timeRelationIterator.next();
@@ -161,13 +160,13 @@ void CSPDisplacementPolicy::computeDisplacement(
     }
 }
 
-void CSPDisplacementPolicy::refreshStays(
-        CSPScenario& cspScenario,
+void FlexDisplacementPolicy::refreshStays(
+        ScenarioModel& cspScenario,
         const QVector<Id<Scenario::TimeNodeModel> >& draggedElements)
 {
-    // time relations stays
     auto& scenario = *cspScenario.getScenario();
-    QHashIterator<Id<Scenario::ConstraintModel>, CSPTimeRelation*> timeRelationIterator(cspScenario.m_timeRelations);
+    // time relations stays
+    QHashIterator<Id<Scenario::ConstraintModel>, TimeRelationModel*> timeRelationIterator(cspScenario.m_timeRelations);
     while(timeRelationIterator.hasNext())
     {
         timeRelationIterator.next();
@@ -175,20 +174,30 @@ void CSPDisplacementPolicy::refreshStays(
         auto& curTimeRelationId = timeRelationIterator.key();
         auto& curTimeRelation = timeRelationIterator.value();
 
-        auto initialMin = scenario.constraint(curTimeRelationId).duration.minDuration();
-        auto initialMax = scenario.constraint(curTimeRelationId).duration.maxDuration();
+        auto& curConstraint = scenario.constraint(curTimeRelationId);
+        auto initialMin = curConstraint.duration.minDuration();
+        auto initialMax = curConstraint.duration.maxDuration();
 
         // - remove old stays
         curTimeRelation->removeStays();
 
         //ad new stays
-        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min == initialMin.msec(), STAY_MINMAX_STRENGTH));
-        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == initialMax.msec(), STAY_MINMAX_STRENGTH));
+        // - if constraint preceed dragged element
+        auto& endTimeNodeId = endTimeNode(curConstraint, scenario).id();
+        auto endTimenode = cspScenario.m_timeNodes[endTimeNodeId];
+        auto endDateMsec = endTimenode->m_iscoreDate->msec();
+        auto distanceFromMinToDate = endDateMsec - curTimeRelation->m_iscoreMin.msec();
+        auto distanceFromMaxToDate = endDateMsec - curTimeRelation->m_iscoreMax.msec();
+
+        // keep min and max around default duration
+        curTimeRelation->addStay(new kiwi::Constraint(endTimenode->m_date - curTimeRelation->m_min == distanceFromMinToDate, STAY_MINMAXFROMDATEONCREATION_STRENGTH));
+        curTimeRelation->addStay(new kiwi::Constraint(endTimenode->m_date - curTimeRelation->m_max == distanceFromMaxToDate, STAY_MINMAXFROMDATEONCREATION_STRENGTH));
+
     }
 
     //time node stays
     // - in timenodes :
-    QHashIterator<Id<Scenario::TimeNodeModel>, CSPTimeNode*> timeNodeIterator(cspScenario.m_timeNodes);
+    QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario.m_timeNodes);
     while (timeNodeIterator.hasNext())
     {
         timeNodeIterator.next();
@@ -197,7 +206,7 @@ void CSPDisplacementPolicy::refreshStays(
         auto& curCspTimeNode = timeNodeIterator.value();
 
         // try to stay on initial value
-        auto initialDate = scenario.timeNode(curTimeNodeId).date();
+        auto initialDate = cspScenario.getScenario()->timeNode(curTimeNodeId).date();
 
         // - remove old stays
         curCspTimeNode->removeStays();

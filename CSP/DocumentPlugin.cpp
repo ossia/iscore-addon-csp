@@ -1,4 +1,4 @@
-#include "CSPDocumentPlugin.hpp"
+#include "DocumentPlugin.hpp"
 
 #include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
 #include <Scenario/Document/BaseScenario/BaseScenario.hpp>
@@ -7,23 +7,23 @@
 
 namespace CSP
 {
-CSPDocumentPlugin::CSPDocumentPlugin(iscore::Document& doc, QObject* parent):
+DocumentPlugin::DocumentPlugin(iscore::Document& doc, QObject* parent):
     iscore::DocumentPluginModel{doc, "CSPDocumentPlugin", parent}
 {
     reload(doc.model());
 }
 
-void CSPDocumentPlugin::reload(iscore::DocumentModel& document)
+void DocumentPlugin::reload(iscore::DocumentModel& document)
 {
     auto scenar = dynamic_cast<Scenario::ScenarioDocumentModel*>(&document.modelDelegate());
     if(!scenar)
         return;
 
     auto& scenarioBase = scenar->baseScenario();
-    m_cspScenario = new CSPScenario(scenarioBase, &scenarioBase);
+    m_cspScenario = new ScenarioModel(scenarioBase, &scenarioBase);
 }
 
-CSPScenario* CSPDocumentPlugin::getScenario() const
+ScenarioModel* DocumentPlugin::getScenario() const
 {
     return m_cspScenario;
 }

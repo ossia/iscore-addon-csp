@@ -1,5 +1,5 @@
-#include "CSPTimeNode.hpp"
-#include "CSPScenario.hpp"
+#include "TimeNode.hpp"
+#include "Scenario.hpp"
 
 #include <kiwi/kiwi.h>
 #include <Scenario/Process/ScenarioInterface.hpp>
@@ -7,8 +7,8 @@
 namespace CSP
 {
 
-CSPTimeNode::CSPTimeNode(
-        CSPScenario& cspScenario,
+TimeNodeModel::TimeNodeModel(
+        ScenarioModel& cspScenario,
         const Id<Scenario::TimeNodeModel>& timeNodeId)
     :CSPConstraintHolder::CSPConstraintHolder(cspScenario.getSolver(), &cspScenario)
 {
@@ -36,20 +36,20 @@ CSPTimeNode::CSPTimeNode(
     }
 
     // watch over date edits
-    con(timeNodeModel, &Scenario::TimeNodeModel::dateChanged, this, &CSPTimeNode::onDateChanged);
+    con(timeNodeModel, &Scenario::TimeNodeModel::dateChanged, this, &TimeNodeModel::onDateChanged);
 }
 
-kiwi::Variable& CSPTimeNode::getDate()
+kiwi::Variable& TimeNodeModel::getDate()
 {
     return m_date;
 }
 
-bool CSPTimeNode::dateChanged() const
+bool TimeNodeModel::dateChanged() const
 {
     return m_date.value() != m_iscoreDate->msec();
 }
 
-void CSPTimeNode::onDateChanged(const TimeValue& date)
+void TimeNodeModel::onDateChanged(const TimeValue& date)
 {
     m_date.setValue(date.msec());
 }

@@ -4,17 +4,20 @@
 #include <Scenario/Tools/dataStructures.hpp>
 #include <Scenario/Process/Algorithms/StandardDisplacementPolicy.hpp>
 
+
 namespace CSP
 {
-class CSPScenario;
+class ScenarioModel;
 
-class CSPDisplacementPolicy
+class FlexDisplacementPolicy
 {
 public:
 
-    CSPDisplacementPolicy() = default;
+    FlexDisplacementPolicy() = default;
 
-    CSPDisplacementPolicy(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel>>& draggedElements);
+    FlexDisplacementPolicy(
+            Scenario::ScenarioModel& scenario,
+            const QVector<Id<Scenario::TimeNodeModel>>& draggedElements);
 
     static
     void
@@ -40,7 +43,8 @@ public:
     {
         Scenario::CommonDisplacementPolicy::revertPositions(std::forward<Args>(args)...);
     }
+
 protected:
-    static void refreshStays(CSPScenario& cspScenario, const QVector<Id<Scenario::TimeNodeModel> >& draggedElements);
+    static void refreshStays(ScenarioModel& cspScenario, const QVector<Id<Scenario::TimeNodeModel> >& draggedElements);
 };
 }

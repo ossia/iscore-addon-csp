@@ -4,9 +4,9 @@
 #include <QVector>
 #include <iscore/tools/SettableIdentifier.hpp>
 #include <Process/TimeValue.hpp>
-#include <CSP/Model/tools/CSPConstraintHolder.hpp>
+#include <CSP/Model/tools/ConstraintHolder.hpp>
 
-#include <CSP/Model/CSPScenario.hpp>
+#include <CSP/Model/Scenario.hpp>
 
 
 namespace Scenario
@@ -16,18 +16,18 @@ class ConstraintModel;
 
 namespace CSP
 {
-class CSPDisplacementPolicy;
-class CSPTimeRelation : public CSPConstraintHolder, public Nano::Observer
+class DisplacementPolicy;
+class TimeRelationModel : public CSPConstraintHolder, public Nano::Observer
 {
-    friend class CSPDisplacementPolicy;
-    friend class CSPFlexDisplacementPolicy;
+    friend class DisplacementPolicy;
+    friend class FlexDisplacementPolicy;
 
 public:
-    CSPTimeRelation(CSPScenario& scenario, const Id<Scenario::ConstraintModel>& constraintId);
+    TimeRelationModel(ScenarioModel& scenario, const Id<Scenario::ConstraintModel>& constraintId);
 
-    CSPTimeRelation() = default;
+    TimeRelationModel() = default;
 
-    ~CSPTimeRelation();
+    ~TimeRelationModel();
 
     kiwi::Variable& getMin();
 
@@ -63,6 +63,6 @@ private:
     void onProcessCreated(const Process::ProcessModel& process);
     void onProcessRemoved(const Process::ProcessModel& process);
 
-    QHash<Id<Process::ProcessModel>, CSPScenario*> m_subScenarios;
+    QHash<Id<Process::ProcessModel>, ScenarioModel*> m_subScenarios;
 };
 }

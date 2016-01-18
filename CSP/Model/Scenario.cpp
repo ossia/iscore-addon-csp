@@ -1,6 +1,6 @@
-#include <CSP/Model/CSPScenario.hpp>
-#include <CSP/Model/CSPTimeNode.hpp>
-#include <CSP/Model/CSPTimeRelation.hpp>
+#include <CSP/Model/Scenario.hpp>
+#include <CSP/Model/TimeNode.hpp>
+#include <CSP/Model/TimeRelation.hpp>
 #include <Scenario/Document/BaseScenario/BaseScenario.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/ScenarioInterface.hpp>
@@ -9,7 +9,7 @@
 
 namespace CSP
 {
-CSPScenario::CSPScenario(
+ScenarioModel::ScenarioModel(
         const Scenario::ScenarioModel& scenario,
         QObject *parent):
     QObject::QObject(parent),
@@ -34,20 +34,20 @@ CSPScenario::CSPScenario(
     }
 
     // Link with i-score
-    scenario.constraints.added.connect<CSPScenario, &CSPScenario::on_constraintCreated>(this);
-    scenario.constraints.removed.connect<CSPScenario, &CSPScenario::on_constraintRemoved>(this);
+    scenario.constraints.added.connect<ScenarioModel, &ScenarioModel::on_constraintCreated>(this);
+    scenario.constraints.removed.connect<ScenarioModel, &ScenarioModel::on_constraintRemoved>(this);
 
-    scenario.states.added.connect<CSPScenario, &CSPScenario::on_stateCreated>(this);
-    scenario.states.removed.connect<CSPScenario, &CSPScenario::on_stateRemoved>(this);
+    scenario.states.added.connect<ScenarioModel, &ScenarioModel::on_stateCreated>(this);
+    scenario.states.removed.connect<ScenarioModel, &ScenarioModel::on_stateRemoved>(this);
 
-    scenario.events.added.connect<CSPScenario, &CSPScenario::on_eventCreated>(this);
-    scenario.events.removed.connect<CSPScenario, &CSPScenario::on_eventRemoved>(this);
+    scenario.events.added.connect<ScenarioModel, &ScenarioModel::on_eventCreated>(this);
+    scenario.events.removed.connect<ScenarioModel, &ScenarioModel::on_eventRemoved>(this);
 
-    scenario.timeNodes.added.connect<CSPScenario, &CSPScenario::on_timeNodeCreated>(this);
-    scenario.timeNodes.removed.connect<CSPScenario, &CSPScenario::on_timeNodeRemoved>(this);
+    scenario.timeNodes.added.connect<ScenarioModel, &ScenarioModel::on_timeNodeCreated>(this);
+    scenario.timeNodes.removed.connect<ScenarioModel, &ScenarioModel::on_timeNodeRemoved>(this);
 }
 
-CSPScenario::CSPScenario(const Scenario::BaseScenario& baseScenario, QObject *parent)
+ScenarioModel::ScenarioModel(const Scenario::BaseScenario& baseScenario, QObject *parent)
     :QObject::QObject(parent), m_scenario(&baseScenario)
 {
     this->setObjectName("CSPScenario");
@@ -64,40 +64,40 @@ CSPScenario::CSPScenario(const Scenario::BaseScenario& baseScenario, QObject *pa
     on_constraintCreated(baseScenario.constraint());
 }
 
-CSPScenario::~CSPScenario()
+ScenarioModel::~ScenarioModel()
 {
     qDeleteAll(m_timeNodes);
     qDeleteAll(m_timeRelations);
 }
 
 kiwi::Solver&
-CSPScenario::getSolver()
+ScenarioModel::getSolver()
 {
     return m_solver;
 }
 
-CSPTimeNode *CSPScenario::getStartTimeNode() const
+TimeNodeModel *ScenarioModel::getStartTimeNode() const
 {
     return m_startTimeNode;
 }
 
-CSPTimeNode* CSPScenario::getEndTimeNode() const
+TimeNodeModel* ScenarioModel::getEndTimeNode() const
 {
     return m_endTimeNode;
 }
 
-const Scenario::ScenarioInterface *CSPScenario::getScenario() const
+const Scenario::ScenarioInterface *ScenarioModel::getScenario() const
 {
     return m_scenario;
 }
 
-CSPTimeNode* CSPScenario::insertTimenode(
+TimeNodeModel* ScenarioModel::insertTimenode(
         const Id<Scenario::TimeNodeModel> &timeNodeId)
 {
     // if timenode not already here, put it in
     if(! m_timeNodes.contains(timeNodeId))
     {
-        auto cspTimenode = new CSPTimeNode(*this, timeNodeId);
+        auto cspTimenode = new TimeNodeModel(*this, timeNodeId);
         m_timeNodes.insert(timeNodeId, cspTimenode);
         return cspTimenode;
     }else
@@ -106,28 +106,28 @@ CSPTimeNode* CSPScenario::insertTimenode(
     }
 }
 
-CSPTimeRelation *CSPScenario::getTimeRelation(
+TimeRelationModel *ScenarioModel::getTimeRelation(
         const Id<Scenario::ConstraintModel> &ConstraintId)
 {
     return m_timeRelations[ConstraintId];
 }
 
 void
-CSPScenario::computeAllConstraints()
+ScenarioModel::computeAllConstraints()
 {
 
 }
 
 void
-CSPScenario::on_constraintCreated(
+ScenarioModel::on_constraintCreated(
         const Scenario::ConstraintModel& constraintModel)
 {
     //create the corresponding time relation
-    m_timeRelations.insert(constraintModel.id(), new CSPTimeRelation{*this, constraintModel.id()});
+    m_timeRelations.insert(constraintModel.id(), new TimeRelationModel{*this, constraintModel.id()});
 }
 
 void
-CSPScenario::on_constraintRemoved(
+ScenarioModel::on_constraintRemoved(
         const Scenario::ConstraintModel& constraint)
 {
     delete(m_timeRelations.take(constraint.id()));
@@ -135,44 +135,44 @@ CSPScenario::on_constraintRemoved(
 
 
 void
-CSPScenario::on_stateCreated(
+ScenarioModel::on_stateCreated(
         const Scenario::StateModel& state)
 {}
 
 void
-CSPScenario::on_stateRemoved(
+ScenarioModel::on_stateRemoved(
         const Scenario::StateModel& state)
 {}
 
 
 void
-CSPScenario::on_eventCreated(
+ScenarioModel::on_eventCreated(
         const Scenario::EventModel& event)
 {}
 
 void
-CSPScenario::on_eventRemoved(
+ScenarioModel::on_eventRemoved(
         const Scenario::EventModel& event)
 {}
 
 
 void
-CSPScenario::on_timeNodeCreated(
+ScenarioModel::on_timeNodeCreated(
         const Scenario::TimeNodeModel& timeNodeModel)
 {
     insertTimenode(timeNodeModel.id());
 }
 
 void
-CSPScenario::on_timeNodeRemoved(
+ScenarioModel::on_timeNodeRemoved(
         const Scenario::TimeNodeModel& timeNode)
 {
     delete(m_timeNodes.take(timeNode.id()));
 }
 
 const
-CSPTimeNode&
-CSPScenario::getInsertTimenode(
+TimeNodeModel&
+ScenarioModel::getInsertTimenode(
         Scenario::ScenarioInterface& scenario,
         const Id<Scenario::TimeNodeModel>& timeNodeId)
 {

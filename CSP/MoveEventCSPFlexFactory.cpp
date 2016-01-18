@@ -1,5 +1,5 @@
 #include <CSP/MoveEventCSPFlexFactory.hpp>
-#include <CSP/CSPFlexDisplacementPolicy.hpp>
+#include <CSP/FlexDisplacementPolicy.hpp>
 #include <Scenario/Commands/Scenario/Displacement/MoveEvent.hpp>
 
 namespace CSP
@@ -10,12 +10,12 @@ Scenario::Command::SerializableMoveEvent* MoveEventCSPFlexFactory::make(
         const TimeValue &newDate,
         ExpandMode mode)
 {
-    return new Scenario::Command::MoveEvent<CSPFlexDisplacementPolicy>(std::move(scenarioPath), eventId, newDate, mode);
+    return new Scenario::Command::MoveEvent<FlexDisplacementPolicy>(std::move(scenarioPath), eventId, newDate, mode);
 }
 
 Scenario::Command::SerializableMoveEvent* MoveEventCSPFlexFactory::make()
 {
-    return new Scenario::Command::MoveEvent<CSPFlexDisplacementPolicy>();
+    return new Scenario::Command::MoveEvent<FlexDisplacementPolicy>();
 }
 
 const Scenario::Command::MoveEventFactoryKey& MoveEventCSPFlexFactory::key_impl() const

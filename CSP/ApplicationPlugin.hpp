@@ -4,11 +4,11 @@
 
 namespace CSP
 {
-class CSPApplicationPlugin final : public iscore::GUIApplicationContextPlugin
+class ApplicationPlugin final : public iscore::GUIApplicationContextPlugin
 {
     public:
-        CSPApplicationPlugin(const iscore::ApplicationContext& pres);
-        ~CSPApplicationPlugin() = default;
+        ApplicationPlugin(const iscore::ApplicationContext& pres);
+        ~ApplicationPlugin() = default;
 
 
         iscore::DocumentPluginModel* loadDocumentPlugin(

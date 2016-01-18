@@ -1,5 +1,5 @@
-#include "CSPApplicationPlugin.hpp"
-#include "CSPDocumentPlugin.hpp"
+#include "ApplicationPlugin.hpp"
+#include "DocumentPlugin.hpp"
 
 #include <Process/Process.hpp>
 #include <core/document/Document.hpp>
@@ -8,12 +8,12 @@
 
 namespace CSP
 {
-CSPApplicationPlugin::CSPApplicationPlugin(const iscore::ApplicationContext& pres) :
+ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& pres) :
     iscore::GUIApplicationContextPlugin {pres, "CSPApplicationPlugin", nullptr}
 {
 }
 
-iscore::DocumentPluginModel* CSPApplicationPlugin::loadDocumentPlugin(
+iscore::DocumentPluginModel* ApplicationPlugin::loadDocumentPlugin(
         const QString& name,
         const VisitorVariant& var,
         iscore::Document *parent)
@@ -23,18 +23,18 @@ iscore::DocumentPluginModel* CSPApplicationPlugin::loadDocumentPlugin(
 }
 
 void
-CSPApplicationPlugin::on_newDocument(iscore::Document* document)
+ApplicationPlugin::on_newDocument(iscore::Document* document)
 {
     if(document)
     {
-        document->model().addPluginModel(new CSPDocumentPlugin{*document, &document->model()});
+        document->model().addPluginModel(new DocumentPlugin{*document, &document->model()});
     }
 }
 
 void
-CSPApplicationPlugin::on_loadedDocument(iscore::Document* document)
+ApplicationPlugin::on_loadedDocument(iscore::Document* document)
 {
-    if(auto pluginModel = document->context().findPlugin<CSPDocumentPlugin>())
+    if(auto pluginModel = document->context().findPlugin<DocumentPlugin>())
     {
         pluginModel->reload(document->model());
     }

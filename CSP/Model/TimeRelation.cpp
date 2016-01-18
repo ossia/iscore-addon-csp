@@ -1,16 +1,16 @@
-#include "CSPTimeRelation.hpp"
-#include "CSPScenario.hpp"
+#include "TimeRelation.hpp"
+#include "Scenario.hpp"
 #include <Scenario/Process/ScenarioInterface.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
-#include <CSP/Model/CSPTimeNode.hpp>
+#include <CSP/Model/TimeNode.hpp>
 #include <kiwi/kiwi.h>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 
 namespace CSP
 {
-CSPTimeRelation::CSPTimeRelation(
-        CSPScenario& cspScenario,
+TimeRelationModel::TimeRelationModel(
+        ScenarioModel& cspScenario,
         const Id<Scenario::ConstraintModel>& constraintId):
     CSPConstraintHolder::CSPConstraintHolder(cspScenario.getSolver(), &cspScenario)
 {
@@ -55,51 +55,51 @@ CSPTimeRelation::CSPTimeRelation(
     {
         if(auto* scenar = dynamic_cast<Scenario::ScenarioModel*>(&process))
         {
-            m_subScenarios.insert(scenar->id(), new CSPScenario(*scenar, scenar));
+            m_subScenarios.insert(scenar->id(), new ScenarioModel(*scenar, scenar));
         }
     }
 
     // watch over durations edits
     con(constraint.duration, &Scenario::ConstraintDurations::minDurationChanged,
-        this, &CSPTimeRelation::onMinDurationChanged);
+        this, &TimeRelationModel::onMinDurationChanged);
     con(constraint.duration, &Scenario::ConstraintDurations::maxDurationChanged,
-        this, &CSPTimeRelation::onMaxDurationChanged);
+        this, &TimeRelationModel::onMaxDurationChanged);
 
     // watch over potential subscenarios
-    constraint.processes.added.connect<CSPTimeRelation, &CSPTimeRelation::onProcessCreated>(this);
-    constraint.processes.removed.connect<CSPTimeRelation, &CSPTimeRelation::onProcessRemoved>(this);
+    constraint.processes.added.connect<TimeRelationModel, &TimeRelationModel::onProcessCreated>(this);
+    constraint.processes.removed.connect<TimeRelationModel, &TimeRelationModel::onProcessRemoved>(this);
 }
 
-CSPTimeRelation::~CSPTimeRelation()
+TimeRelationModel::~TimeRelationModel()
 {
 }
 
-kiwi::Variable& CSPTimeRelation::getMin()
+kiwi::Variable& TimeRelationModel::getMin()
 {
     return m_min;
 }
 
-kiwi::Variable& CSPTimeRelation::getMax()
+kiwi::Variable& TimeRelationModel::getMax()
 {
     return m_max;
 }
 
-bool CSPTimeRelation::minChanged() const
+bool TimeRelationModel::minChanged() const
 {
     return m_min.value() != m_iscoreMin.msec();
 }
 
-bool CSPTimeRelation::maxChanged() const
+bool TimeRelationModel::maxChanged() const
 {
     return m_max.value() != m_iscoreMax.msec();
 }
 
-void CSPTimeRelation::onMinDurationChanged(const TimeValue& min)
+void TimeRelationModel::onMinDurationChanged(const TimeValue& min)
 {
     m_min.setValue(min.msec());
 }
 
-void CSPTimeRelation::onMaxDurationChanged(const TimeValue& max)
+void TimeRelationModel::onMaxDurationChanged(const TimeValue& max)
 {
     if(max.isInfinite())
     {
@@ -110,15 +110,15 @@ void CSPTimeRelation::onMaxDurationChanged(const TimeValue& max)
     }
 }
 
-void CSPTimeRelation::onProcessCreated(const Process::ProcessModel& process)
+void TimeRelationModel::onProcessCreated(const Process::ProcessModel& process)
 {
     if(auto scenario = dynamic_cast<const Scenario::ScenarioModel*>(&process))
     {
-        m_subScenarios.insert(scenario->id(), new CSPScenario(*scenario, const_cast<Scenario::ScenarioModel*>(scenario)));
+        m_subScenarios.insert(scenario->id(), new ScenarioModel(*scenario, const_cast<Scenario::ScenarioModel*>(scenario)));
     }
 }
 
-void CSPTimeRelation::onProcessRemoved(const Process::ProcessModel& process)
+void TimeRelationModel::onProcessRemoved(const Process::ProcessModel& process)
 {
     if(auto scenario = dynamic_cast<const Scenario::ScenarioModel*>(&process))
     {

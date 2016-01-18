@@ -1,5 +1,5 @@
 #include <iscore_addon_csp.hpp>
-#include <CSP/CSPApplicationPlugin.hpp>
+#include <CSP/ApplicationPlugin.hpp>
 #include <CSP/MoveEventCSPFactory.hpp>
 #include <CSP/MoveEventCSPFlexFactory.hpp>
 
@@ -13,7 +13,7 @@ iscore_addon_csp::iscore_addon_csp() :
 iscore::GUIApplicationContextPlugin* iscore_addon_csp::make_applicationPlugin(
         const iscore::ApplicationContext& app)
 {
-    return new CSP::CSPApplicationPlugin{app};
+    return new CSP::ApplicationPlugin{app};
 }
 
 std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>>

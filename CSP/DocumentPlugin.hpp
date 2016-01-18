@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iscore/plugins/documentdelegate/plugin/DocumentDelegatePluginModel.hpp>
-#include "Model/CSPScenario.hpp"
+#include "Model/Scenario.hpp"
 
 namespace iscore
 {
@@ -12,17 +12,17 @@ class OSSIABaseScenarioElement;
 
 namespace CSP
 {
-class CSPDocumentPlugin : public iscore::DocumentPluginModel
+class DocumentPlugin : public iscore::DocumentPluginModel
 {
         Q_OBJECT
     public:
-        CSPDocumentPlugin(iscore::Document& doc, QObject* parent);
+        DocumentPlugin(iscore::Document& doc, QObject* parent);
 
         void reload(iscore::DocumentModel& doc);
 
-        CSPScenario* getScenario() const;
+        ScenarioModel* getScenario() const;
 
     private:
-        CSPScenario* m_cspScenario;
+        ScenarioModel* m_cspScenario;
 };
 }

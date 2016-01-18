@@ -3,12 +3,12 @@
 #include <Process/TimeValue.hpp>
 #include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
 #include <iscore/tools/SettableIdentifier.hpp>
-#include <CSP/Model/tools/CSPConstraintHolder.hpp>
+#include <CSP/Model/tools/ConstraintHolder.hpp>
 
 #include <kiwi/kiwi.h>
 #include <QVector>
 
-#include "CSPScenario.hpp"
+#include "Scenario.hpp"
 
 
 namespace Scenario
@@ -18,18 +18,18 @@ class TimeNodeModel;
 
 namespace CSP
 {
-class CSPDisplacementPolicy;
-class CSPTimeNode : public CSPConstraintHolder
+class DisplacementPolicy;
+class TimeNodeModel : public CSPConstraintHolder
 {
-    friend class CSPDisplacementPolicy;
-    friend class CSPFlexDisplacementPolicy;
+    friend class DisplacementPolicy;
+    friend class FlexDisplacementPolicy;
 
 public:
-    CSPTimeNode(CSPScenario& cspScenario, const Id<Scenario::TimeNodeModel>& timeNodeId);
+    TimeNodeModel(ScenarioModel& cspScenario, const Id<Scenario::TimeNodeModel>& timeNodeId);
 
-    CSPTimeNode() = default;
+    TimeNodeModel() = default;
 
-    ~CSPTimeNode() = default;
+    ~TimeNodeModel() = default;
 
     kiwi::Variable& getDate();
 
