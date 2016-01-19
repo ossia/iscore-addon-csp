@@ -12,8 +12,6 @@ TimeNodeModel::TimeNodeModel(
         const Id<Scenario::TimeNodeModel>& timeNodeId)
     :ConstraintHolder::ConstraintHolder(cspScenario.getSolver(), &cspScenario)
 {
-//    auto& solver = cspScenario.getSolver();
-
     this->setParent(&cspScenario);
     this->setObjectName("CSPTimeNode");
 
@@ -29,10 +27,13 @@ TimeNodeModel::TimeNodeModel(
     // except for start timenode
     if(timeNodeId.val() != 0)
     {
-        PUT_CONSTRAINT(constraintNodeAfterStart, m_date >= cspScenario.getStartTimeNode()->getDate());
-    }else// if it is indeed start node, constrain him the the start value
+        auto constraintName = new kiwi::Constraint({m_date >= cspScenario.getStartTimeNode()->getDate()});\
+        putConstraintInSolver(constraintName);
+    }
+    else// if it is indeed start node, constrain him the the start value
     {
-        PUT_CONSTRAINT(cStartDontMove, m_date == m_date.value());
+        auto constraintName = new kiwi::Constraint({m_date == m_date.value()});\
+        putConstraintInSolver(constraintName);
     }
 
     // watch over date edits

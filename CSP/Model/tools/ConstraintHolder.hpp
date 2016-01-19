@@ -5,11 +5,6 @@
 #include <CSP/Model/Scenario.hpp>
 #include <kiwi/kiwi.h>
 
-#define PUT_CONSTRAINT(constraintName, constraint) \
-    kiwi::Constraint* constraintName = new kiwi::Constraint(constraint);\
-    m_solver.addConstraint(*constraintName);\
-    m_constraints.push_back(constraintName)
-
 namespace CSP
 {
 class ConstraintHolder : public QObject
@@ -54,6 +49,13 @@ public:
 
         m_stays.clear();//important
     }
+
+    void putConstraintInSolver(kiwi::Constraint* cstr)
+    {
+        m_solver.addConstraint(*cstr);
+        m_constraints.push_back(cstr);
+    }
+
 
 protected:
     QVector<kiwi::Constraint*> m_constraints;
