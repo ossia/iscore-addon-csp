@@ -4,6 +4,11 @@
 #include <Scenario/Tools/dataStructures.hpp>
 #include <Scenario/Process/Algorithms/StandardDisplacementPolicy.hpp>
 
+/* *****************************************************
+ * This Displacement Policy allow to move
+ * timenodes only inside the [min max] interval
+ * *****************************************************/
+
 namespace CSP
 {
 class ScenarioModel;

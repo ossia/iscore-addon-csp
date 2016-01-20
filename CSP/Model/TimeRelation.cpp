@@ -101,10 +101,12 @@ bool TimeRelationModel::maxChanged() const
 void TimeRelationModel::onMinDurationChanged(const TimeValue& min)
 {
     m_min.setValue(min.msec());
+    m_iscoreMin = min;
 }
 
 void TimeRelationModel::onMaxDurationChanged(const TimeValue& max)
 {
+    m_iscoreMax = max;
     if(max.isInfinite())
     {
         //TODO : ??? remove constraints on max?

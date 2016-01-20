@@ -20,8 +20,8 @@ Scenario::Command::SerializableMoveEvent* MoveEventCSPFlexFactory::make()
 
 const Scenario::Command::MoveEventFactoryKey& MoveEventCSPFlexFactory::key_impl() const
 {
-    // TODO why is CSP CSPFlex and CSPFlex CSP
-    static const Scenario::Command::MoveEventFactoryKey str{"CSP"};
+    // TODO why was CSP CSPFlex and CSPFlex CSP
+    static const Scenario::Command::MoveEventFactoryKey str{"CSPFlex"};
     return str;
 }
 }

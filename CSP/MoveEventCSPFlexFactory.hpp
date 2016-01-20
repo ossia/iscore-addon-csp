@@ -18,15 +18,15 @@ class MoveEventCSPFlexFactory : public Scenario::Command::MoveEventFactoryInterf
 
         Scenario::Command::SerializableMoveEvent* make() override;
 
+        // Priority is called to choose the policy.
+        // The choosen policy is the one with the greatest priority
+        // in the asked context (="strategy")
         int priority(MoveEventFactoryInterface::Strategy strategy) override
         {
             switch(strategy)
             {
-                case MoveEventFactoryInterface::Strategy::CREATION:
+                case MoveEventFactoryInterface::Strategy::MOVING_LESS:
                     return 10;
-                    break;
-                case MoveEventFactoryInterface::Strategy::MOVING:
-                    return 5;
                     break;
                 default:
                     return -1;// not suited for other strategies

@@ -175,8 +175,7 @@ void FlexDisplacementPolicy::refreshStays(
         auto& curTimeRelation = timeRelationIterator.value();
 
         auto& curConstraint = scenario.constraint(curTimeRelationId);
-        auto initialMin = curConstraint.duration.minDuration();
-        auto initialMax = curConstraint.duration.maxDuration();
+        auto initialDefault = curConstraint.duration.defaultDuration().msec();
 
         // - remove old stays
         curTimeRelation->removeStays();
@@ -185,14 +184,19 @@ void FlexDisplacementPolicy::refreshStays(
         // - if constraint preceed dragged element
         auto& endTimeNodeId = endTimeNode(curConstraint, scenario).id();
         auto endTimenode = cspScenario.m_timeNodes[endTimeNodeId];
-        auto endDateMsec = endTimenode->m_iscoreDate->msec();
-        auto distanceFromMinToDate = endDateMsec - curTimeRelation->m_iscoreMin.msec();
-        auto distanceFromMaxToDate = endDateMsec - curTimeRelation->m_iscoreMax.msec();
 
-        // keep min and max around default duration
-        curTimeRelation->addStay(new kiwi::Constraint(endTimenode->m_date - curTimeRelation->m_min == distanceFromMinToDate, STAY_MINMAXFROMDATEONCREATION_STRENGTH));
-        curTimeRelation->addStay(new kiwi::Constraint(endTimenode->m_date - curTimeRelation->m_max == distanceFromMaxToDate, STAY_MINMAXFROMDATEONCREATION_STRENGTH));
+        auto distanceFromMinToDate = initialDefault - curTimeRelation->m_iscoreMin.msec();
+        auto distanceFromMinToMax = curTimeRelation->m_iscoreMax.msec() - curTimeRelation->m_iscoreMin.msec();
 
+        auto& startTimeNodeId = startTimeNode(curConstraint, scenario).id();
+        auto startTimenode = cspScenario.m_timeNodes[startTimeNodeId];
+
+        // ensure than [min - max] interval stays the same
+        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == curTimeRelation->m_min + distanceFromMinToMax,
+                                                     kiwi::strength::required));
+        // Try to keep min and max around default duration
+        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min  == endTimenode->m_date - startTimenode->m_date - distanceFromMinToDate,
+                                                      kiwi::strength::weak));
     }
 
     //time node stays
@@ -212,7 +216,7 @@ void FlexDisplacementPolicy::refreshStays(
         curCspTimeNode->removeStays();
 
         // - add new stays
-        curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), STAY_TNODE_STRENGTH));
+        curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), kiwi::strength::medium));
     }
 }
 }
