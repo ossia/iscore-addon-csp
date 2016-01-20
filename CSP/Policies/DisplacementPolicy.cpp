@@ -1,16 +1,15 @@
-#include <CSP/FlexDisplacementPolicy.hpp>
+#include <CSP/Policies/DisplacementPolicy.hpp>
 #include <CSP/Model/Scenario.hpp>
 #include <CSP/Model/TimeNode.hpp>
 #include <CSP/Model/TimeRelation.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
-
 #include <CSP/DisplacementComputer.hpp>
 
 namespace CSP
 {
-FlexDisplacementPolicy::FlexDisplacementPolicy(
+DisplacementPolicy::DisplacementPolicy(
         Scenario::ScenarioModel& scenario,
-        const QVector<Id<Scenario::TimeNodeModel> >& draggedElements)
+        const QVector<Id<Scenario::TimeNodeModel>>& draggedElements)
 {
     if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
     {
@@ -24,7 +23,7 @@ FlexDisplacementPolicy::FlexDisplacementPolicy(
     }
 }
 
-void FlexDisplacementPolicy::computeDisplacement(
+void DisplacementPolicy::computeDisplacement(
         Scenario::ScenarioModel& scenario,
         const QVector<Id<Scenario::TimeNodeModel>>& draggedElements,
         const TimeValue& deltaTime,
@@ -33,12 +32,12 @@ void FlexDisplacementPolicy::computeDisplacement(
     compute(scenario, draggedElements, deltaTime, elementsProperties);
 }
 
-void FlexDisplacementPolicy::refreshStays(
+void DisplacementPolicy::refreshStays(
         ScenarioModel& cspScenario,
         const QVector<Id<Scenario::TimeNodeModel> >& draggedElements)
 {
-    auto& scenario = *cspScenario.getScenario();
     // time relations stays
+    auto& scenario = *cspScenario.getScenario();
     QHashIterator<Id<Scenario::ConstraintModel>, TimeRelationModel*> timeRelationIterator(cspScenario.m_timeRelations);
     while(timeRelationIterator.hasNext())
     {
@@ -47,29 +46,15 @@ void FlexDisplacementPolicy::refreshStays(
         auto& curTimeRelationId = timeRelationIterator.key();
         auto& curTimeRelation = timeRelationIterator.value();
 
-        auto& curConstraint = scenario.constraint(curTimeRelationId);
-        auto initialDefault = curConstraint.duration.defaultDuration().msec();
+        auto initialMin = scenario.constraint(curTimeRelationId).duration.minDuration();
+        auto initialMax = scenario.constraint(curTimeRelationId).duration.maxDuration();
 
         // - remove old stays
         curTimeRelation->removeStays();
 
         //ad new stays
-        // - if constraint preceed dragged element
-        auto& endTimeNodeId = endTimeNode(curConstraint, scenario).id();
-        auto endTimenode = cspScenario.m_timeNodes[endTimeNodeId];
-
-        auto distanceFromMinToDate = initialDefault - curTimeRelation->m_iscoreMin.msec();
-        auto distanceFromMinToMax = curTimeRelation->m_iscoreMax.msec() - curTimeRelation->m_iscoreMin.msec();
-
-        auto& startTimeNodeId = startTimeNode(curConstraint, scenario).id();
-        auto startTimenode = cspScenario.m_timeNodes[startTimeNodeId];
-
-        // ensure than [min - max] interval stays the same
-        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == curTimeRelation->m_min + distanceFromMinToMax,
-                                                     kiwi::strength::required));
-        // Try to keep min and max around default duration
-        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min  == endTimenode->m_date - startTimenode->m_date - distanceFromMinToDate,
-                                                      kiwi::strength::weak));
+        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min == initialMin.msec(), kiwi::strength::required));
+        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == initialMax.msec(), kiwi::strength::required));
     }
 
     //time node stays
@@ -83,7 +68,7 @@ void FlexDisplacementPolicy::refreshStays(
         auto& curCspTimeNode = timeNodeIterator.value();
 
         // try to stay on initial value
-        auto initialDate = cspScenario.getScenario()->timeNode(curTimeNodeId).date();
+        auto initialDate = scenario.timeNode(curTimeNodeId).date();
 
         // - remove old stays
         curCspTimeNode->removeStays();

@@ -12,9 +12,9 @@ include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/kiwi")
 set(HDRS
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/ApplicationPlugin.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DisplacementComputer.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DisplacementPolicy.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DocumentPlugin.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/FlexDisplacementPolicy.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Policies/FlexDisplacementPolicy.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Policies/DisplacementPolicy.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Model/Scenario.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Model/TimeNode.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Model/TimeRelation.hpp"
@@ -27,9 +27,9 @@ set(HDRS
 set(SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/ApplicationPlugin.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DisplacementComputer.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DisplacementPolicy.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DocumentPlugin.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/FlexDisplacementPolicy.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Policies/FlexDisplacementPolicy.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Policies/DisplacementPolicy.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Model/Scenario.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Model/TimeNode.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Model/TimeRelation.cpp"

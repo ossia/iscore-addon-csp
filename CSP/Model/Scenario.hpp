@@ -3,7 +3,7 @@
 #include <QHash>
 
 #include <iscore/tools/SettableIdentifier.hpp>
-#include <CSP/DisplacementPolicy.hpp>
+#include <CSP/Policies/DisplacementPolicy.hpp>
 
 #include <kiwi/kiwi.h>
 

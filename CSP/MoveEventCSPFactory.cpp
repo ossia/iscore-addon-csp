@@ -1,5 +1,5 @@
 #include <CSP/MoveEventCSPFactory.hpp>
-#include <CSP/DisplacementPolicy.hpp>
+#include <CSP/Policies/DisplacementPolicy.hpp>
 #include <Scenario/Commands/Scenario/Displacement/MoveEvent.hpp>
 
 namespace CSP
