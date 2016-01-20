@@ -32,6 +32,7 @@ public:
     ~TimeNodeModel() = default;
 
     kiwi::Variable& getDate();
+    const TimeValue* getIscoreDate();
 
     /**
      * @brief dateChanged

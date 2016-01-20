@@ -45,6 +45,11 @@ kiwi::Variable& TimeNodeModel::getDate()
     return m_date;
 }
 
+const TimeValue*TimeNodeModel::getIscoreDate()
+{
+    return m_iscoreDate;
+}
+
 bool TimeNodeModel::dateChanged() const
 {
     return m_date.value() != m_iscoreDate->msec();

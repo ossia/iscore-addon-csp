@@ -33,6 +33,10 @@ public:
 
     kiwi::Variable& getMax();
 
+    const TimeValue& getIscoreMin();
+
+    const TimeValue& getIscoreMax();
+
     /**
      * @brief minChanged
      * call this function to check if csp min differ from iscore min

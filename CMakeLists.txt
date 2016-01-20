@@ -11,6 +11,7 @@ include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/kiwi")
 
 set(HDRS
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/ApplicationPlugin.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DisplacementComputer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DisplacementPolicy.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DocumentPlugin.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/FlexDisplacementPolicy.hpp"
@@ -25,6 +26,7 @@ set(HDRS
 )
 set(SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/ApplicationPlugin.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DisplacementComputer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DisplacementPolicy.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/DocumentPlugin.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/FlexDisplacementPolicy.cpp"

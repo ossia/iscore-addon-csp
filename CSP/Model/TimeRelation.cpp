@@ -88,6 +88,16 @@ kiwi::Variable& TimeRelationModel::getMax()
     return m_max;
 }
 
+const TimeValue&TimeRelationModel::getIscoreMin()
+{
+    return m_iscoreMin;
+}
+
+const TimeValue&TimeRelationModel::getIscoreMax()
+{
+    return m_iscoreMax;
+}
+
 bool TimeRelationModel::minChanged() const
 {
     return m_min.value() != m_iscoreMin.msec();
