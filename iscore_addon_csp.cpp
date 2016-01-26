@@ -19,7 +19,7 @@ iscore::GUIApplicationContextPlugin* iscore_addon_csp::make_applicationPlugin(
 std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>>
 iscore_addon_csp::factories(
         const iscore::ApplicationContext& ctx,
-        const iscore::FactoryBaseKey& key) const
+        const iscore::AbstractFactoryKey& key) const
 {
     return instantiate_factories<
             iscore::ApplicationContext,

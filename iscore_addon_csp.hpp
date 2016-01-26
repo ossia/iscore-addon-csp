@@ -28,5 +28,5 @@ class iscore_addon_csp:
 
         std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>> factories(
                 const iscore::ApplicationContext&,
-                const iscore::FactoryBaseKey& factoryName) const override;
+                const iscore::AbstractFactoryKey& factoryName) const override;
 };
