@@ -4,6 +4,11 @@
 #include <Scenario/Tools/dataStructures.hpp>
 #include <Scenario/Process/Algorithms/StandardDisplacementPolicy.hpp>
 
+/* *****************************************************
+ * This Displacement Policy allow to move
+ * timenodes in bounds and resize previous constraints
+ * *****************************************************/
+
 
 namespace CSP
 {
