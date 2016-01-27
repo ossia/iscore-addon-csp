@@ -10,19 +10,8 @@ class ApplicationPlugin final : public iscore::GUIApplicationContextPlugin
         ApplicationPlugin(const iscore::ApplicationContext& pres);
         ~ApplicationPlugin() = default;
 
-
-        iscore::DocumentPluginModel* loadDocumentPlugin(
-                const QString& name,
-                const VisitorVariant& var,
-                iscore::Document *parent) override;
-
-
+    private:
         void on_newDocument(iscore::Document* doc) override;
         void on_loadedDocument(iscore::Document* doc) override;
-
-    protected:
-        //void on_documentChanged() override;
-
-    private:
 };
 }

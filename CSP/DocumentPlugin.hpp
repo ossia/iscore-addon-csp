@@ -12,7 +12,7 @@ class OSSIABaseScenarioElement;
 
 namespace CSP
 {
-class DocumentPlugin : public iscore::DocumentPluginModel
+class DocumentPlugin : public iscore::DocumentPlugin
 {
         Q_OBJECT
     public:

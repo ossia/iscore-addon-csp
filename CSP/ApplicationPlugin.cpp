@@ -13,15 +13,6 @@ ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& pres) :
 {
 }
 
-iscore::DocumentPluginModel* ApplicationPlugin::loadDocumentPlugin(
-        const QString& name,
-        const VisitorVariant& var,
-        iscore::Document *parent)
-{
-    // We don't have anything to load; it's easier to just recreate.
-    return nullptr;
-}
-
 void
 ApplicationPlugin::on_newDocument(iscore::Document* document)
 {
