@@ -33,6 +33,6 @@ class MoveEventCSPFactory : public Scenario::Command::MoveEventFactoryInterface
             }
         }
 
-        const Scenario::Command::MoveEventFactoryKey& key_impl() const override;
+        const Scenario::Command::MoveEventFactoryKey& concreteFactoryKey() const override;
 };
 }
