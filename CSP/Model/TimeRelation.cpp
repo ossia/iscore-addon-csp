@@ -24,7 +24,16 @@ TimeRelationModel::TimeRelationModel(
     m_iscoreMax = constraint.duration.maxDuration();
 
     m_min.setValue(m_iscoreMin.msec());
-    m_max.setValue(m_iscoreMax.msec());
+
+    if(m_iscoreMax.isInfinite())
+    {
+        // TODO check this
+        m_max.setValue(std::numeric_limits<double>::infinity());
+    }
+    else
+    {
+        m_max.setValue(m_iscoreMax.msec());
+    }
 
     // weight
     //solver.addEditVariable(m_min, kiwi::strength::strong);
@@ -120,6 +129,7 @@ void TimeRelationModel::onMaxDurationChanged(const TimeValue& max)
     if(max.isInfinite())
     {
         //TODO : ??? remove constraints on max?
+        m_max.setValue(std::numeric_limits<double>::infinity());
     }else
     {
         m_max.setValue(max.msec());
