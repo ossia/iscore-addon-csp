@@ -21,6 +21,7 @@ class TimeRelationModel : public ConstraintHolder, public Nano::Observer
 {
     friend class DisplacementPolicy;
     friend class FlexDisplacementPolicy;
+    friend class ExecutionPolicy;
 
 public:
     TimeRelationModel(ScenarioModel& scenario, const Id<Scenario::ConstraintModel>& constraintId);

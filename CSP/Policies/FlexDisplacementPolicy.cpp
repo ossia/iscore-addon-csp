@@ -50,12 +50,12 @@ void FlexDisplacementPolicy::refreshStays(
         auto& curConstraint = scenario.constraint(curTimeRelationId);
         auto initialMin = curConstraint.duration.minDuration().msec();
 
+        auto distanceFromMinToMax = curTimeRelation->m_iscoreMax.msec() - curTimeRelation->m_iscoreMin.msec();
+
         // - remove old stays
         curTimeRelation->removeStays();
 
-        //ad new stays
-
-        auto distanceFromMinToMax = curTimeRelation->m_iscoreMax.msec() - curTimeRelation->m_iscoreMin.msec();
+        // ad new stays
 
         // ensure than [min - max] interval stays the same
         curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == curTimeRelation->m_min + distanceFromMinToMax,

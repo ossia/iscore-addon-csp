@@ -1,20 +1,19 @@
-#include <CSP/Policies/DisplacementPolicy.hpp>
+#include "ExecutionPolicy.hpp"
+
 #include <CSP/Model/Scenario.hpp>
 #include <CSP/Model/TimeNode.hpp>
 #include <CSP/Model/TimeRelation.hpp>
-#include <Scenario/Process/Algorithms/Accessors.hpp>
-#include <CSP/DisplacementComputer.hpp>
 
 namespace CSP
 {
-DisplacementPolicy::DisplacementPolicy(
+ExecutionPolicy::ExecutionPolicy(
         Scenario::ScenarioModel& scenario,
-        const QVector<Id<Scenario::TimeNodeModel>>& draggedElements)
+        const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements)
 {
     if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
     {
         // add stays to all elements
-        refreshStays(*cspScenario, draggedElements);
+        refreshStays(*cspScenario, positionnedElements);
 
     }else
     {
@@ -23,18 +22,9 @@ DisplacementPolicy::DisplacementPolicy(
     }
 }
 
-void DisplacementPolicy::computeDisplacement(
-        Scenario::ScenarioModel& scenario,
-        const QVector<Id<Scenario::TimeNodeModel>>& draggedElements,
-        const TimeValue& deltaTime,
-        Scenario::ElementsProperties& elementsProperties)
-{
-    compute(scenario, draggedElements, deltaTime, elementsProperties);
-}
-
-void DisplacementPolicy::refreshStays(
+void ExecutionPolicy::refreshStays(
         ScenarioModel& cspScenario,
-        const QVector<Id<Scenario::TimeNodeModel> >& draggedElements)
+        const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements)
 {
     // time relations stays
     auto& scenario = *cspScenario.getScenario();
@@ -53,9 +43,9 @@ void DisplacementPolicy::refreshStays(
         curTimeRelation->removeStays();
 
         //ad new stays
-        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min == initialMin.msec(), kiwi::strength::required));
+        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min == initialMin.msec(), kiwi::strength::strong));
         if(!initialMax.isInfinite())
-            curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == initialMax.msec(), kiwi::strength::required));
+            curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == initialMax.msec(), kiwi::strength::strong));
     }
 
     //time node stays
@@ -75,7 +65,13 @@ void DisplacementPolicy::refreshStays(
         curCspTimeNode->removeStays();
 
         // - add new stays
+        // already past timenodes don(t have to move
+        if(positionnedElements.contains(curTimeNodeId))
+            curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), kiwi::strength::required));
+
         curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), kiwi::strength::medium));
     }
+
 }
+
 }

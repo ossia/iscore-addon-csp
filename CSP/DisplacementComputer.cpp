@@ -28,10 +28,10 @@ void compute(
 	    TimeValue initialDate;
 	    if(elementsProperties.timenodes.contains(curDraggedTimeNodeId))
 	    {
-		initialDate = elementsProperties.timenodes[curDraggedTimeNodeId].oldDate;
+        initialDate = elementsProperties.timenodes[curDraggedTimeNodeId].oldDate;
 	    }else
 	    {
-		initialDate = *(curDraggedCspTimeNode->getIscoreDate());
+        initialDate = *(curDraggedCspTimeNode->getIscoreDate());
 	    }
 
 	    //weight
@@ -42,10 +42,10 @@ void compute(
 
 	    try
 	    {
-		solver.suggestValue(curDraggedCspTimeNode->getDate(), newDate);
+        solver.suggestValue(curDraggedCspTimeNode->getDate(), newDate);
 	    }catch(...)
 	    {
-		qDebug("lalalalalala j'ai même pas planté");
+        qDebug("lalalalalala j'ai même pas planté");
 	    }
 	}
 
@@ -114,7 +114,7 @@ void compute(
 		    QMap<Id<Scenario::ConstraintViewModel>, Id<Scenario::RackModel>> map;
 		    for(const Scenario::ConstraintViewModel* vm : curConstraint.viewModels())
 		    {
-			map[vm->id()] = vm->shownRack();
+                map[vm->id()] = vm->shownRack();
 		    }
 
 		    elementsProperties.constraints[curTimeRelationId].savedDisplay = {{iscore::IDocument::path(curConstraint), arr}, map};
@@ -131,7 +131,8 @@ void compute(
 		*/
 
 		elementsProperties.constraints[curTimeRelationId].newMin = TimeValue::fromMsecs(curCspTimerelation->getMin().value());
-		elementsProperties.constraints[curTimeRelationId].newMax = TimeValue::fromMsecs(curCspTimerelation->getMax().value());
+        if(!curCspTimerelation->getIscoreMax().isInfinite())
+            elementsProperties.constraints[curTimeRelationId].newMax = TimeValue::fromMsecs(curCspTimerelation->getMax().value());
 	    }
 	}
     }else
@@ -140,4 +141,79 @@ void compute(
     }
 }
 
+void computeMin(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements, Scenario::ElementsProperties& elementsProperties)
+{
+    if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
+    {
+        auto& solver = cspScenario->getSolver();
+        QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario->m_timeNodes);
+        auto tnIt = timeNodeIterator;
+        while (timeNodeIterator.hasNext())
+        {
+            timeNodeIterator.next();
+
+            auto& curTimeNodeId = timeNodeIterator.key();
+            auto& curCspTimeNode = timeNodeIterator.value();
+
+            if(!positionnedElements.contains(curTimeNodeId))
+            {
+                solver.addEditVariable(curCspTimeNode->getDate(),  kiwi::strength::strong + 1.0);
+                solver.suggestValue(curCspTimeNode->getDate(), 0);
+            }
+        }
+        solver.updateVariables();
+        while(tnIt.hasNext())
+        {
+            tnIt.next();
+            auto& curTimeNodeId = timeNodeIterator.key();
+            auto& curCspTimeNode = timeNodeIterator.value();
+
+            if(!positionnedElements.contains(curTimeNodeId))
+                solver.removeEditVariable(curCspTimeNode->getDate());
+
+            auto& iscore_tn = scenario.timeNode(curTimeNodeId);
+            auto nextConstraints = Scenario::nextConstraints(iscore_tn, scenario);
+            for(auto cstr : nextConstraints)
+            {
+                if(! elementsProperties.constraints.contains(cstr))
+                {
+                    auto curCstCstr = cspScenario->getTimeRelation(cstr);
+                    elementsProperties.constraints[cstr] = Scenario::ConstraintProperties{};
+                    elementsProperties.constraints[cstr].oldMin = curCstCstr->getIscoreMin();
+                    elementsProperties.constraints[cstr].oldMax = curCstCstr->getIscoreMax();
+                }
+                auto& iscore_cstr = scenario.constraint(cstr);
+                auto& prevTnId = Scenario::startTimeNode(iscore_cstr, scenario);
+                auto prevCspTn = cspScenario->m_timeNodes.take(prevTnId.id());
+
+                elementsProperties.constraints[cstr].newMin.setMSecs(curCspTimeNode->getDate().value() - prevCspTn->getDate().value());
+            }
+        }
+    }
 }
+
+void computeMax(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements, Scenario::ElementsProperties& elementsProperties)
+{
+
+    if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
+    {
+        auto& solver = cspScenario->getSolver();
+        QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario->m_timeNodes);
+        while (timeNodeIterator.hasNext())
+        {
+            timeNodeIterator.next();
+
+            auto& curTimeNodeId = timeNodeIterator.key();
+            auto& curCspTimeNode = timeNodeIterator.value();
+
+            if(!positionnedElements.contains(curTimeNodeId))
+            {
+                solver.addEditVariable(curCspTimeNode->getDate(),  kiwi::strength::strong + 1.0);
+                //solver.suggestValue(curCspTimeNode->getDate(), zero);
+            }
+        }
+        solver.updateVariables();
+    }
+}
+
+} // namespace CSP

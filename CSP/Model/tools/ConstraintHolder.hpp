@@ -58,8 +58,8 @@ public:
 
 
 protected:
-    QVector<kiwi::Constraint*> m_constraints;
-    QVector<kiwi::Constraint*> m_stays;
+    QVector<kiwi::Constraint*> m_constraints; // all constraints to put in solver
+    QVector<kiwi::Constraint*> m_stays; // only updatable constraints
 
     kiwi::Solver& m_solver;
 };

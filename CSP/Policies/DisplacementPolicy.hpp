@@ -29,7 +29,7 @@ public:
             const TimeValue& deltaTime,
             Scenario::ElementsProperties& elementsProperties);
 
-    static QString name()
+    static QString name() // TODO : usefull ?
     {
         return QString{"CSP"};
     }

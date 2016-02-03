@@ -23,6 +23,7 @@ class TimeNodeModel : public ConstraintHolder
 {
     friend class DisplacementPolicy;
     friend class FlexDisplacementPolicy;
+    friend class ExecutionPolicy;
 
 public:
     TimeNodeModel(ScenarioModel& cspScenario, const Id<Scenario::TimeNodeModel>& timeNodeId);

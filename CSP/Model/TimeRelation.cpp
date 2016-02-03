@@ -48,12 +48,12 @@ TimeRelationModel::TimeRelationModel(
 
     // apply model constraints
     // 1 - min >= 0
-    auto cMinSupZero = new kiwi::Constraint({m_min >= 0});\
-    putConstraintInSolver(cMinSupZero);
+    auto cMinGreaterThanZero = new kiwi::Constraint({m_min >= 0});\
+    putConstraintInSolver(cMinGreaterThanZero);
 
     // 2 - min inferior to max
-    auto cMinInfMax = new kiwi::Constraint({m_min <= m_max});\
-    putConstraintInSolver(cMinInfMax);
+    auto cMinLowerThanMax = new kiwi::Constraint({m_min <= m_max});\
+    putConstraintInSolver(cMinLowerThanMax);
 
     // 3 - date of end timenode inside min and max
     auto cNextDateMin = new kiwi::Constraint({nextCSPTimenode->getDate() >= (prevCSPTimenode->getDate() + m_min)});\
