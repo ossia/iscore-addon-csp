@@ -21,7 +21,7 @@ class MoveEventCSPFlexFactory : public Scenario::Command::MoveEventFactoryInterf
         // Priority is called to choose the policy.
         // The choosen policy is the one with the greatest priority
         // in the asked context (="strategy")
-        int priority(MoveEventFactoryInterface::Strategy strategy) override
+        int priority(MoveEventFactoryInterface::Strategy strategy) const override
         {
             switch(strategy)
             {
@@ -35,6 +35,6 @@ class MoveEventCSPFlexFactory : public Scenario::Command::MoveEventFactoryInterf
         }
 
 
-        const Scenario::Command::MoveEventFactoryKey& concreteFactoryKey() const override;
+        const ConcreteFactoryKey& concreteFactoryKey() const override;
 };
 }

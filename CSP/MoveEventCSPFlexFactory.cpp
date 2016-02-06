@@ -18,10 +18,10 @@ Scenario::Command::SerializableMoveEvent* MoveEventCSPFlexFactory::make()
     return new Scenario::Command::MoveEvent<FlexDisplacementPolicy>();
 }
 
-const Scenario::Command::MoveEventFactoryKey& MoveEventCSPFlexFactory::concreteFactoryKey() const
+auto MoveEventCSPFlexFactory::concreteFactoryKey() const -> const ConcreteFactoryKey&
 {
     // TODO why was CSP CSPFlex and CSPFlex CSP
-    static const Scenario::Command::MoveEventFactoryKey str{"849ecd64-546f-4fc1-9ddf-51cfa7f39881"};
+    static const ConcreteFactoryKey str{"849ecd64-546f-4fc1-9ddf-51cfa7f39881"};
     return str;
 }
 }
