@@ -34,6 +34,6 @@ class iscore_addon_csp:
                 const iscore::ApplicationContext&,
                 const iscore::AbstractFactoryKey& factoryName) const override;
 
-        int32_t version() const override;
+        iscore::Version version() const override;
         UuidKey<iscore::Plugin> key() const override;
 };
