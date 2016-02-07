@@ -8,7 +8,7 @@ namespace CSP
 {
 class MoveEventCSPFlexFactory : public Scenario::Command::MoveEventFactoryInterface
 {
-        // MoveEventFactory interface
+        ISCORE_CONCRETE_FACTORY_DECL("849ecd64-546f-4fc1-9ddf-51cfa7f39881")
     public:
         Scenario::Command::SerializableMoveEvent* make(
                 Path<Scenario::ScenarioModel> &&scenarioPath,
@@ -34,7 +34,5 @@ class MoveEventCSPFlexFactory : public Scenario::Command::MoveEventFactoryInterf
             }
         }
 
-
-        const ConcreteFactoryKey& concreteFactoryKey() const override;
 };
 }
