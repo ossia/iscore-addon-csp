@@ -17,10 +17,4 @@ Scenario::Command::SerializableMoveEvent* MoveEventCSPFactory::make()
 {
     return new Scenario::Command::MoveEvent<DisplacementPolicy>();
 }
-
-const Scenario::Command::MoveEventFactoryKey& MoveEventCSPFactory::concreteFactoryKey() const
-{
-    static const Scenario::Command::MoveEventFactoryKey str{"29b0eb02-9dbb-476a-a8e4-866702c6db2f"};
-    return str;
-}
 }

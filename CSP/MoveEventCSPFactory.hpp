@@ -7,7 +7,7 @@ namespace CSP
 {
 class MoveEventCSPFactory : public Scenario::Command::MoveEventFactoryInterface
 {
-        // MoveEventFactory interface
+        ISCORE_CONCRETE_FACTORY_DECL("29b0eb02-9dbb-476a-a8e4-866702c6db2f")
     public:
         Scenario::Command::SerializableMoveEvent* make(
                 Path<Scenario::ScenarioModel> &&scenarioPath,
@@ -20,7 +20,7 @@ class MoveEventCSPFactory : public Scenario::Command::MoveEventFactoryInterface
         // Priority is called to choose the policy.
         // The choosen policy is the one with the greatest priority
         // in the asked context (="strategy")
-        int priority(MoveEventFactoryInterface::Strategy strategy) override
+        int priority(MoveEventFactoryInterface::Strategy strategy) const override
         {
             switch(strategy)
             {
@@ -32,7 +32,5 @@ class MoveEventCSPFactory : public Scenario::Command::MoveEventFactoryInterface
                     break;
             }
         }
-
-        const Scenario::Command::MoveEventFactoryKey& concreteFactoryKey() const override;
 };
 }
