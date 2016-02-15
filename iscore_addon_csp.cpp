@@ -2,6 +2,7 @@
 #include <CSP/ApplicationPlugin.hpp>
 #include <CSP/MoveEventCSPFactory.hpp>
 #include <CSP/MoveEventCSPFlexFactory.hpp>
+#include <CSP/ExecutionPolicyFactory.hpp>
 #include <CSP/Settings/Factory.hpp>
 #include <iscore/plugins/customfactory/FactorySetup.hpp>
 
@@ -33,7 +34,9 @@ iscore_addon_csp::factories(
             CSP::MoveEventCSPFactory,
             CSP::MoveEventCSPFlexFactory>,
         FW<iscore::SettingsDelegateFactory,
-            CSP::Settings::Factory>
+            CSP::Settings::Factory>,
+        FW<Scenario::CoherencyCheckerFactoryInterface,
+            CSP::ExecutionPolicyFactory>
       >
     >(ctx, key);
 }

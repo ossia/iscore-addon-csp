@@ -23,6 +23,7 @@ set(HDRS
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Model/tools/ConstraintHolder.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/MoveEventCSPFactory.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/MoveEventCSPFlexFactory.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/ExecutionPolicyFactory.hpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Settings/Factory.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Settings/Model.hpp"
@@ -44,6 +45,7 @@ set(SRCS
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Model/TimeRelation.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/MoveEventCSPFactory.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/MoveEventCSPFlexFactory.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/CSP/ExecutionPolicyFactory.cpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Settings/Factory.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/CSP/Settings/Model.cpp"
