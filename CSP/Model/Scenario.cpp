@@ -19,7 +19,6 @@ ScenarioModel::ScenarioModel(
 
     // ensure that start then end timenode are stored first of all
     m_startTimeNode = insertTimenode(scenario.startTimeNode().id());
-    m_endTimeNode = insertTimenode(scenario.endTimeNode().id());
 
     // insert existing timenodes
     for(auto& timeNodeModel : scenario.timeNodes)
@@ -54,11 +53,9 @@ ScenarioModel::ScenarioModel(const Scenario::BaseScenario& baseScenario, QObject
 
     // ensure that start then end timenode are stored first of all
     m_startTimeNode = insertTimenode(baseScenario.startTimeNode().id());
-    m_endTimeNode = insertTimenode(baseScenario.endTimeNode().id());
 
     // insert existing timenodes
     on_timeNodeCreated(baseScenario.startTimeNode());
-    on_timeNodeCreated(baseScenario.endTimeNode());
 
     // insert existing constraints
     on_constraintCreated(baseScenario.constraint());
@@ -79,11 +76,6 @@ ScenarioModel::getSolver()
 TimeNodeModel *ScenarioModel::getStartTimeNode() const
 {
     return m_startTimeNode;
-}
-
-TimeNodeModel* ScenarioModel::getEndTimeNode() const
-{
-    return m_endTimeNode;
 }
 
 const Scenario::ScenarioInterface *ScenarioModel::getScenario() const

@@ -73,8 +73,7 @@ private:
 
     const Scenario::ScenarioInterface* m_scenario;
 
-    TimeNodeModel* m_startTimeNode;
-    TimeNodeModel* m_endTimeNode;
+    TimeNodeModel* m_startTimeNode{};
 
 
     void computeAllConstraints();
