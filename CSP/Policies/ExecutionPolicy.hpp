@@ -9,7 +9,7 @@ namespace CSP {
 
 class ScenarioModel;
 
-class ExecutionPolicy final : public CSPCoherencyCheckerInterface
+class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
 {
     public:
         ExecutionPolicy() = default;
@@ -18,12 +18,14 @@ class ExecutionPolicy final : public CSPCoherencyCheckerInterface
 
         void
         computeDisplacement(
-                Scenario::ScenarioModel& scenario,
                 const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements,
                 Scenario::ElementsProperties& elementsProperties) override;
 
     protected:
         static void refreshStays(ScenarioModel& cspScenario, const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements);
+
+    private:
+        Scenario::ScenarioModel& m_scenario;
 };
 
 }

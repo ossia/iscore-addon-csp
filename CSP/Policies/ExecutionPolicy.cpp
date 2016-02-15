@@ -10,7 +10,8 @@ namespace CSP
 {
 ExecutionPolicy::ExecutionPolicy(
         Scenario::ScenarioModel& scenario,
-        const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements)
+        const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements):
+    m_scenario(scenario)
 {
     if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
     {
@@ -24,13 +25,12 @@ ExecutionPolicy::ExecutionPolicy(
     }
 }
 
-void ExecutionPolicy::computeDisplacement(Scenario::ScenarioModel& scenario,
-                                          const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements,
+void ExecutionPolicy::computeDisplacement(const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements,
                                           Scenario::ElementsProperties& elementsProperties)
 {
-    computeMin(scenario, positionnedElements, elementsProperties);
-    computeMax(scenario, positionnedElements, elementsProperties);
-    updateConstraints(scenario, elementsProperties);
+    computeMin(m_scenario, positionnedElements, elementsProperties);
+    computeMax(m_scenario, positionnedElements, elementsProperties);
+    updateConstraints(m_scenario, elementsProperties);
 }
 
 void ExecutionPolicy::refreshStays(
