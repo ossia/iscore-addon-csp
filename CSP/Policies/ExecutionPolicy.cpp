@@ -4,6 +4,8 @@
 #include <CSP/Model/TimeNode.hpp>
 #include <CSP/Model/TimeRelation.hpp>
 
+#include <CSP/DisplacementComputer.hpp>
+
 namespace CSP
 {
 ExecutionPolicy::ExecutionPolicy(
@@ -20,6 +22,15 @@ ExecutionPolicy::ExecutionPolicy(
         ISCORE_BREAKPOINT;
         throw std::runtime_error("No CSP scenario found for this model");
     }
+}
+
+void ExecutionPolicy::computeDisplacement(Scenario::ScenarioModel& scenario,
+                                          const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements,
+                                          Scenario::ElementsProperties& elementsProperties)
+{
+    computeMin(scenario, positionnedElements, elementsProperties);
+    computeMax(scenario, positionnedElements, elementsProperties);
+    updateConstraints(scenario, elementsProperties);
 }
 
 void ExecutionPolicy::refreshStays(

@@ -147,7 +147,7 @@ void computeMin(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::Ti
     {
         auto& solver = cspScenario->getSolver();
         QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario->m_timeNodes);
-        auto tnIt = timeNodeIterator;
+        auto startTnIt = timeNodeIterator;
         while (timeNodeIterator.hasNext())
         {
             timeNodeIterator.next();
@@ -162,31 +162,20 @@ void computeMin(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::Ti
             }
         }
         solver.updateVariables();
-        while(tnIt.hasNext())
+        timeNodeIterator = startTnIt;
+        while(timeNodeIterator.hasNext())
         {
-            tnIt.next();
+            timeNodeIterator.next();
             auto& curTimeNodeId = timeNodeIterator.key();
             auto& curCspTimeNode = timeNodeIterator.value();
 
             if(!positionnedElements.contains(curTimeNodeId))
                 solver.removeEditVariable(curCspTimeNode->getDate());
 
-            auto& iscore_tn = scenario.timeNode(curTimeNodeId);
-            auto nextConstraints = Scenario::nextConstraints(iscore_tn, scenario);
-            for(auto cstr : nextConstraints)
+            if(! elementsProperties.timenodes.contains(curTimeNodeId))
             {
-                if(! elementsProperties.constraints.contains(cstr))
-                {
-                    auto curCstCstr = cspScenario->getTimeRelation(cstr);
-                    elementsProperties.constraints[cstr] = Scenario::ConstraintProperties{};
-                    elementsProperties.constraints[cstr].oldMin = curCstCstr->getIscoreMin();
-                    elementsProperties.constraints[cstr].oldMax = curCstCstr->getIscoreMax();
-                }
-                auto& iscore_cstr = scenario.constraint(cstr);
-                auto& prevTnId = Scenario::startTimeNode(iscore_cstr, scenario);
-                auto prevCspTn = cspScenario->m_timeNodes.take(prevTnId.id());
-
-                elementsProperties.constraints[cstr].newMin.setMSecs(curCspTimeNode->getDate().value() - prevCspTn->getDate().value());
+                elementsProperties.timenodes[curTimeNodeId] = Scenario::TimenodeProperties{};
+                elementsProperties.timenodes[curTimeNodeId].dateMin = curCspTimeNode->getDate().value();
             }
         }
     }
@@ -195,10 +184,12 @@ void computeMin(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::Ti
 void computeMax(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements, Scenario::ElementsProperties& elementsProperties)
 {
 
+    auto maxDate = scenario.duration().msec();
     if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
     {
         auto& solver = cspScenario->getSolver();
         QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario->m_timeNodes);
+        auto startTnIt = timeNodeIterator;
         while (timeNodeIterator.hasNext())
         {
             timeNodeIterator.next();
@@ -209,10 +200,58 @@ void computeMax(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::Ti
             if(!positionnedElements.contains(curTimeNodeId))
             {
                 solver.addEditVariable(curCspTimeNode->getDate(),  kiwi::strength::strong + 1.0);
-                //solver.suggestValue(curCspTimeNode->getDate(), zero);
+                solver.suggestValue(curCspTimeNode->getDate(), maxDate);
             }
         }
         solver.updateVariables();
+        timeNodeIterator = startTnIt;
+        while(timeNodeIterator.hasNext())
+        {
+            timeNodeIterator.next();
+            auto& curTimeNodeId = timeNodeIterator.key();
+            auto& curCspTimeNode = timeNodeIterator.value();
+
+            if(!positionnedElements.contains(curTimeNodeId))
+                solver.removeEditVariable(curCspTimeNode->getDate());
+
+            if(! elementsProperties.timenodes.contains(curTimeNodeId))
+            {
+                elementsProperties.timenodes[curTimeNodeId] = Scenario::TimenodeProperties{};
+            }
+            elementsProperties.timenodes[curTimeNodeId].dateMax = curCspTimeNode->getDate().value();
+        }
+    }
+}
+
+void updateConstraints(Scenario::ScenarioModel& scenario, Scenario::ElementsProperties& elementsProperties)
+{
+    if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
+    {
+        QHashIterator<Id<Scenario::ConstraintModel>, TimeRelationModel*> timeRelationIterator(cspScenario->m_timeRelations);
+        while(timeRelationIterator.hasNext())
+        {
+            timeRelationIterator.next();
+            const auto& curTimeRelationId = timeRelationIterator.key();
+
+            auto& startTn = Scenario::startTimeNode(scenario.constraint(curTimeRelationId), scenario);
+            auto& endTn = Scenario::endTimeNode(scenario.constraint(curTimeRelationId), scenario);
+
+            if(! elementsProperties.constraints.contains(curTimeRelationId))
+            {
+                elementsProperties.constraints[curTimeRelationId] = Scenario::ConstraintProperties{};
+                auto& iscore_cstr = scenario.constraint(curTimeRelationId);
+                elementsProperties.constraints[curTimeRelationId].oldMin = iscore_cstr.duration.minDuration();
+                elementsProperties.constraints[curTimeRelationId].oldMax = iscore_cstr.duration.maxDuration();
+            }
+            elementsProperties.constraints[curTimeRelationId].newMin.setMSecs(std::max(
+                    elementsProperties.timenodes[endTn.id()].dateMin - elementsProperties.timenodes[startTn.id()].dateMax,
+                    elementsProperties.constraints[curTimeRelationId].oldMin.msec()));
+
+
+            elementsProperties.constraints[curTimeRelationId].newMax.setMSecs(std::min(
+                    elementsProperties.timenodes[endTn.id()].dateMax - elementsProperties.timenodes[startTn.id()].dateMin,
+                    elementsProperties.constraints[curTimeRelationId].oldMax.msec()));
+        }
     }
 }
 

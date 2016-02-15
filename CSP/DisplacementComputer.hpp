@@ -22,4 +22,7 @@ void computeMax(Scenario::ScenarioModel& scenario,
         const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements,
         Scenario::ElementsProperties& elementsProperties);
 
+void updateConstraints(Scenario::ScenarioModel& scenario,
+        Scenario::ElementsProperties& elementsProperties);
+
 }

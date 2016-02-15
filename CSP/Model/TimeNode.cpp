@@ -20,7 +20,6 @@ TimeNodeModel::TimeNodeModel(
     m_iscoreDate = &timeNodeModel.date();
 
     m_date.setValue(m_iscoreDate->msec());
-
     // apply model constraints
 
     // 1 - events cannot happen before the start node
