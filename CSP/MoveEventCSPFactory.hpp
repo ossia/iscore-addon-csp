@@ -3,6 +3,8 @@
 #include <Scenario/Commands/Scenario/Displacement/MoveEventFactoryInterface.hpp>
 #include <Scenario/Commands/Scenario/Displacement/MoveEventList.hpp>
 
+#include <CSP/Settings/Model.hpp>
+
 namespace CSP
 {
 class MoveEventCSPFactory : public Scenario::Command::MoveEventFactoryInterface
@@ -20,17 +22,17 @@ class MoveEventCSPFactory : public Scenario::Command::MoveEventFactoryInterface
         // Priority is called to choose the policy.
         // The choosen policy is the one with the greatest priority
         // in the asked context (="strategy")
-        int priority(MoveEventFactoryInterface::Strategy strategy) const override
+        int priority(const iscore::ApplicationContext& ctx, MoveEventFactoryInterface::Strategy s) const override
         {
-            switch(strategy)
+            auto mode = ctx.settings<CSP::Settings::Model>().getMode();
+
+            if(s == MoveEventFactoryInterface::Strategy::MOVE
+                && mode == CSP::Settings::Mode::Mode2)
             {
-                case MoveEventFactoryInterface::Strategy::MOVING_BOUNDED:
-                    return 10;
-                    break;
-                default:
-                    return -1;// not suited for other strategies
-                    break;
+                return 10;
             }
+            else
+                return -1;// not suited for other strategies
         }
 };
 }
