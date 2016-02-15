@@ -26,7 +26,8 @@ class MoveEventCSPFlexFactory : public Scenario::Command::MoveEventFactoryInterf
         {
             auto mode = ctx.settings<CSP::Settings::Model>().getMode();
 
-            if(mode == CSP::Settings::Mode::Mode1)
+            if(s == MoveEventFactoryInterface::Strategy::MOVE
+                && mode == CSP::Settings::Mode::Mode1)
             {
                 return 10;
             }
