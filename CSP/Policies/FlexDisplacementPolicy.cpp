@@ -8,7 +8,7 @@
 
 namespace CSP
 {
-FlexDisplacementPolicy::FlexDisplacementPolicy(
+void FlexDisplacementPolicy::init(
         Scenario::ScenarioModel& scenario,
         const QVector<Id<Scenario::TimeNodeModel> >& draggedElements)
 {

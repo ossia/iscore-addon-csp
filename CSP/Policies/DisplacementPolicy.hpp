@@ -15,37 +15,37 @@ class ScenarioModel;
 
 class DisplacementPolicy
 {
-public:
+    public:
+        static void init(
+                Scenario::ScenarioModel& scenario,
+                const QVector<Id<Scenario::TimeNodeModel>>& draggedElements);
 
-    DisplacementPolicy() = default;
+        static void computeDisplacement(
+                Scenario::ScenarioModel& scenario,
+                const QVector<Id<Scenario::TimeNodeModel>>& draggedElements,
+                const TimeValue& deltaTime,
+                Scenario::ElementsProperties& elementsProperties);
 
-    DisplacementPolicy(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel>>& draggedElements);
+        static QString name() // TODO : usefull ?
+        {
+            return QString{"CSP"};
+        }
 
-    static
-    void
-    computeDisplacement(
-            Scenario::ScenarioModel& scenario,
-            const QVector<Id<Scenario::TimeNodeModel>>& draggedElements,
-            const TimeValue& deltaTime,
-            Scenario::ElementsProperties& elementsProperties);
+        template<typename... Args>
+        static void updatePositions(Args&&... args)
+        {
+            Scenario::CommonDisplacementPolicy::updatePositions(std::forward<Args>(args)...);
+        }
 
-    static QString name() // TODO : usefull ?
-    {
-        return QString{"CSP"};
-    }
+        template<typename... Args>
+        static void revertPositions(Args&&... args)
+        {
+            Scenario::CommonDisplacementPolicy::revertPositions(std::forward<Args>(args)...);
+        }
 
-    template<typename... Args>
-    static void updatePositions(Args&&... args)
-    {
-        Scenario::CommonDisplacementPolicy::updatePositions(std::forward<Args>(args)...);
-    }
-
-    template<typename... Args>
-    static void revertPositions(Args&&... args)
-    {
-        Scenario::CommonDisplacementPolicy::revertPositions(std::forward<Args>(args)...);
-    }
-protected:
-    static void refreshStays(ScenarioModel& cspScenario, const QVector<Id<Scenario::TimeNodeModel> >& draggedElements);
+    protected:
+        static void refreshStays(
+                ScenarioModel& cspScenario,
+                const QVector<Id<Scenario::TimeNodeModel> >& draggedElements);
 };
 }
