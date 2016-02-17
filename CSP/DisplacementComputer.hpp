@@ -14,15 +14,8 @@ void compute(
     const TimeValue& deltaTime,
     Scenario::ElementsProperties& elementsProperties);
 
-void computeMin(Scenario::ScenarioModel& scenario,
-        const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements,
-        Scenario::ElementsProperties& elementsProperties);
-
-void computeMax(Scenario::ScenarioModel& scenario,
-        const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements,
-        Scenario::ElementsProperties& elementsProperties);
-
 void updateConstraints(Scenario::ScenarioModel& scenario,
-        Scenario::ElementsProperties& elementsProperties);
+                       const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements,
+                       Scenario::ElementsProperties& elementsProperties);
 
 }

@@ -29,7 +29,7 @@ public:
            m_solver.removeConstraint(*constraint);
            delete constraint;
         }
-
+        m_constraints.clear();
         removeStays();
     }
 

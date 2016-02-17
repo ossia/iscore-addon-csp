@@ -5,6 +5,9 @@
 #include <CSP/Model/TimeRelation.hpp>
 
 #include <CSP/DisplacementComputer.hpp>
+#include <Scenario/Process/Algorithms/Accessors.hpp>
+#include <Scenario/Document/State/StateModel.hpp>
+#include <Scenario/Document/Event/ExecutionStatus.hpp>
 
 namespace CSP
 {
@@ -28,9 +31,17 @@ ExecutionPolicy::ExecutionPolicy(
 void ExecutionPolicy::computeDisplacement(const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements,
                                           Scenario::ElementsProperties& elementsProperties)
 {
-    computeMin(m_scenario, positionnedElements, elementsProperties);
-    computeMax(m_scenario, positionnedElements, elementsProperties);
-    updateConstraints(m_scenario, elementsProperties);
+    try{
+    if(ScenarioModel* cspScenario = m_scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
+    {
+        refreshStays(*cspScenario, positionnedElements);
+    }
+    }
+    catch(...)
+    {qDebug() << "failed to init solver";}
+
+    updateConstraints(m_scenario, positionnedElements, elementsProperties);
+
 }
 
 void ExecutionPolicy::refreshStays(
@@ -50,10 +61,17 @@ void ExecutionPolicy::refreshStays(
         auto initialMin = scenario.constraint(curTimeRelationId).duration.minDuration();
         auto initialMax = scenario.constraint(curTimeRelationId).duration.maxDuration();
 
+        auto& startSt =  Scenario::startState(scenario.constraint(curTimeRelationId), scenario);
+
+        if (startSt.status() == Scenario::ExecutionStatus::Disposed)
+        {
+            curTimeRelation->removeAllConstraints();
+            continue;
+        }
         // - remove old stays
         curTimeRelation->removeStays();
 
-        //ad new stays
+        //add new stays
         curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min == initialMin.msec(), kiwi::strength::strong));
         if(!initialMax.isInfinite())
             curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == initialMax.msec(), kiwi::strength::strong));
@@ -80,7 +98,7 @@ void ExecutionPolicy::refreshStays(
         if(positionnedElements.contains(curTimeNodeId))
             curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), kiwi::strength::required));
 
-        curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), kiwi::strength::medium));
+        curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), kiwi::strength::weak));
     }
 
 }

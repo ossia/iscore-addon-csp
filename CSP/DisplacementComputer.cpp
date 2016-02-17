@@ -141,116 +141,77 @@ void compute(
     }
 }
 
-void computeMin(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements, Scenario::ElementsProperties& elementsProperties)
+void updateConstraints(Scenario::ScenarioModel& scenario,
+                       const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements,
+                       Scenario::ElementsProperties& elementsProperties)
 {
     if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
     {
         auto& solver = cspScenario->getSolver();
-        QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario->m_timeNodes);
-        auto startTnIt = timeNodeIterator;
-        while (timeNodeIterator.hasNext())
-        {
-            timeNodeIterator.next();
+        auto maxDate = scenario.duration().msec();
 
-            auto& curTimeNodeId = timeNodeIterator.key();
-            auto& curCspTimeNode = timeNodeIterator.value();
-
-            if(!positionnedElements.contains(curTimeNodeId))
-            {
-                solver.addEditVariable(curCspTimeNode->getDate(),  kiwi::strength::strong + 1.0);
-                solver.suggestValue(curCspTimeNode->getDate(), 0);
-            }
-        }
-        solver.updateVariables();
-        timeNodeIterator = startTnIt;
-        while(timeNodeIterator.hasNext())
-        {
-            timeNodeIterator.next();
-            auto& curTimeNodeId = timeNodeIterator.key();
-            auto& curCspTimeNode = timeNodeIterator.value();
-
-            if(!positionnedElements.contains(curTimeNodeId))
-                solver.removeEditVariable(curCspTimeNode->getDate());
-
-            if(! elementsProperties.timenodes.contains(curTimeNodeId))
-            {
-                elementsProperties.timenodes[curTimeNodeId] = Scenario::TimenodeProperties{};
-                elementsProperties.timenodes[curTimeNodeId].dateMin = curCspTimeNode->getDate().value();
-            }
-        }
-    }
-}
-
-void computeMax(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements, Scenario::ElementsProperties& elementsProperties)
-{
-
-    auto maxDate = scenario.duration().msec();
-    if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
-    {
-        auto& solver = cspScenario->getSolver();
-        QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario->m_timeNodes);
-        auto startTnIt = timeNodeIterator;
-        while (timeNodeIterator.hasNext())
-        {
-            timeNodeIterator.next();
-
-            auto& curTimeNodeId = timeNodeIterator.key();
-            auto& curCspTimeNode = timeNodeIterator.value();
-
-            if(!positionnedElements.contains(curTimeNodeId))
-            {
-                solver.addEditVariable(curCspTimeNode->getDate(),  kiwi::strength::strong + 1.0);
-                solver.suggestValue(curCspTimeNode->getDate(), maxDate);
-            }
-        }
-        solver.updateVariables();
-        timeNodeIterator = startTnIt;
-        while(timeNodeIterator.hasNext())
-        {
-            timeNodeIterator.next();
-            auto& curTimeNodeId = timeNodeIterator.key();
-            auto& curCspTimeNode = timeNodeIterator.value();
-
-            if(!positionnedElements.contains(curTimeNodeId))
-                solver.removeEditVariable(curCspTimeNode->getDate());
-
-            if(! elementsProperties.timenodes.contains(curTimeNodeId))
-            {
-                elementsProperties.timenodes[curTimeNodeId] = Scenario::TimenodeProperties{};
-            }
-            elementsProperties.timenodes[curTimeNodeId].dateMax = curCspTimeNode->getDate().value();
-        }
-    }
-}
-
-void updateConstraints(Scenario::ScenarioModel& scenario, Scenario::ElementsProperties& elementsProperties)
-{
-    if(ScenarioModel* cspScenario = scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
-    {
         QHashIterator<Id<Scenario::ConstraintModel>, TimeRelationModel*> timeRelationIterator(cspScenario->m_timeRelations);
         while(timeRelationIterator.hasNext())
         {
             timeRelationIterator.next();
             const auto& curTimeRelationId = timeRelationIterator.key();
 
-            auto& startTn = Scenario::startTimeNode(scenario.constraint(curTimeRelationId), scenario);
-            auto& endTn = Scenario::endTimeNode(scenario.constraint(curTimeRelationId), scenario);
+            auto& startSt =  Scenario::startState(scenario.constraint(curTimeRelationId), scenario);
+
+            if (startSt.status() == Scenario::ExecutionStatus::Disposed)
+            {
+                continue;
+            }
 
             if(! elementsProperties.constraints.contains(curTimeRelationId))
             {
                 elementsProperties.constraints[curTimeRelationId] = Scenario::ConstraintProperties{};
-                auto& iscore_cstr = scenario.constraint(curTimeRelationId);
-                elementsProperties.constraints[curTimeRelationId].oldMin = iscore_cstr.duration.minDuration();
-                elementsProperties.constraints[curTimeRelationId].oldMax = iscore_cstr.duration.maxDuration();
             }
-            elementsProperties.constraints[curTimeRelationId].newMin.setMSecs(std::max(
-                    elementsProperties.timenodes[endTn.id()].dateMin - elementsProperties.timenodes[startTn.id()].dateMax,
-                    elementsProperties.constraints[curTimeRelationId].oldMin.msec()));
+            auto& iscore_cstr = scenario.constraint(curTimeRelationId);
+            elementsProperties.constraints[curTimeRelationId].oldMin = iscore_cstr.duration.minDuration();
+            elementsProperties.constraints[curTimeRelationId].oldMax = iscore_cstr.duration.maxDuration();
 
+            auto& startTn = Scenario::startTimeNode(scenario.constraint(curTimeRelationId), scenario);
+            auto& endTn = Scenario::endTimeNode(scenario.constraint(curTimeRelationId), scenario);
 
-            elementsProperties.constraints[curTimeRelationId].newMax.setMSecs(std::min(
-                    elementsProperties.timenodes[endTn.id()].dateMax - elementsProperties.timenodes[startTn.id()].dateMin,
-                    elementsProperties.constraints[curTimeRelationId].oldMax.msec()));
+            auto& startTnId = startTn.id();
+            auto& endTnId = endTn.id();
+
+            auto ossia_startTn = (cspScenario->m_timeNodes)[startTnId];
+            auto ossia_endTn = cspScenario->m_timeNodes[endTnId];
+
+            try {
+                // add var
+                solver.addEditVariable(ossia_startTn->getDate(),  kiwi::strength::strong);
+                solver.addEditVariable(ossia_endTn->getDate(),  kiwi::strength::strong);
+
+                // maximum extend
+                solver.suggestValue(ossia_startTn->getDate(), maxDate);
+                solver.suggestValue(ossia_endTn->getDate(), 0);
+                solver.updateVariables();
+
+                elementsProperties.constraints[curTimeRelationId].newMax.setMSecs(
+                        ossia_endTn->getDate().value() - ossia_startTn->getDate().value());
+
+                // min
+                solver.suggestValue(ossia_startTn->getDate(), 0);
+                solver.suggestValue(ossia_endTn->getDate(), maxDate);
+                solver.updateVariables();
+
+                elementsProperties.constraints[curTimeRelationId].newMin.setMSecs(
+                            ossia_endTn->getDate().value() - ossia_startTn->getDate().value());
+
+                // rm var
+                solver.removeEditVariable(ossia_startTn->getDate());
+                solver.removeEditVariable(ossia_endTn->getDate());
+            }
+            catch(...) // if any fail in kiwi, we use user values
+            {
+                auto& cstr = scenario.constraint(curTimeRelationId);
+                elementsProperties.constraints[curTimeRelationId].newMax = cstr.duration.maxDuration();
+                elementsProperties.constraints[curTimeRelationId].newMin = cstr.duration.minDuration();
+                qDebug() << "kiwi failed";
+            }
         }
     }
 }
