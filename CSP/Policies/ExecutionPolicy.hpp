@@ -22,7 +22,9 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
                 Scenario::ElementsProperties& elementsProperties) override;
 
     protected:
-        static void refreshStays(ScenarioModel& cspScenario, const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements);
+        void refreshStays(ScenarioModel& cspScenario,
+                                 Scenario::ElementsProperties& elementsProperties,
+                                 const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements);
 
     private:
         Scenario::ScenarioModel& m_scenario;

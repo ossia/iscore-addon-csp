@@ -137,7 +137,7 @@ void compute(
 	}
     }else
     {
-	std::runtime_error("No CSP scenario found for this model");
+        std::runtime_error("No CSP scenario found for this model");
     }
 }
 
@@ -157,6 +157,11 @@ void updateConstraints(Scenario::ScenarioModel& scenario,
             const auto& curTimeRelationId = timeRelationIterator.key();
 
             auto& startSt =  Scenario::startState(scenario.constraint(curTimeRelationId), scenario);
+            auto& endSt =  Scenario::endState(scenario.constraint(curTimeRelationId), scenario);
+
+            if(endSt.status() == Scenario::ExecutionStatus::Disposed ||
+                    endSt.status() == Scenario::ExecutionStatus::Happened)
+                continue;
 
             if (startSt.status() == Scenario::ExecutionStatus::Disposed)
             {
@@ -182,15 +187,14 @@ void updateConstraints(Scenario::ScenarioModel& scenario,
 
             try {
                 // add var
-                solver.addEditVariable(ossia_startTn->getDate(),  kiwi::strength::strong);
-                solver.addEditVariable(ossia_endTn->getDate(),  kiwi::strength::strong);
+                solver.addEditVariable(ossia_startTn->getDate(),  kiwi::strength::medium);
+                solver.addEditVariable(ossia_endTn->getDate(),  kiwi::strength::medium);
 
                 // maximum extend
                 solver.suggestValue(ossia_startTn->getDate(), maxDate);
                 solver.suggestValue(ossia_endTn->getDate(), 0);
                 solver.updateVariables();
-
-                elementsProperties.constraints[curTimeRelationId].newMax.setMSecs(
+                elementsProperties.constraints[curTimeRelationId].newMin.setMSecs(
                         ossia_endTn->getDate().value() - ossia_startTn->getDate().value());
 
                 // min
@@ -198,7 +202,7 @@ void updateConstraints(Scenario::ScenarioModel& scenario,
                 solver.suggestValue(ossia_endTn->getDate(), maxDate);
                 solver.updateVariables();
 
-                elementsProperties.constraints[curTimeRelationId].newMin.setMSecs(
+                elementsProperties.constraints[curTimeRelationId].newMax.setMSecs(
                             ossia_endTn->getDate().value() - ossia_startTn->getDate().value());
 
                 // rm var
