@@ -40,7 +40,10 @@ void Model::setMode(Mode mode)
 
 void Model::setFirstTimeSettings()
 {
-    setMode(Mode::Disabled);
+    m_mode = Mode::Disabled;
+
+    QSettings s;
+    s.setValue(Keys::mode, static_cast<int>(Mode::Disabled));
 }
 
 }
