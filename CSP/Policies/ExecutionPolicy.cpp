@@ -16,6 +16,7 @@ ExecutionPolicy::ExecutionPolicy(
         const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements):
     m_scenario(scenario)
 {
+    // We set the system with i-score values
     if(ScenarioModel* cspScenario = m_scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
     {
         QHashIterator<Id<Scenario::ConstraintModel>, TimeRelationModel*> timeRelationIterator(cspScenario->m_timeRelations);

@@ -159,22 +159,34 @@ void updateConstraints(Scenario::ScenarioModel& scenario,
             auto& startSt =  Scenario::startState(scenario.constraint(curTimeRelationId), scenario);
             auto& endSt =  Scenario::endState(scenario.constraint(curTimeRelationId), scenario);
 
-            if(endSt.status() == Scenario::ExecutionStatus::Disposed ||
-                    endSt.status() == Scenario::ExecutionStatus::Happened)
+            // if the constraint is past, skip
+            if(endSt.status() == Scenario::ExecutionStatus::Happened)
                 continue;
 
+            // if disposed, skip
             if (startSt.status() == Scenario::ExecutionStatus::Disposed)
             {
                 continue;
             }
 
+            // init elementsProperties for this constraint
+            auto& iscore_cstr = scenario.constraint(curTimeRelationId);
             if(! elementsProperties.constraints.contains(curTimeRelationId))
             {
                 elementsProperties.constraints[curTimeRelationId] = Scenario::ConstraintProperties{};
             }
-            auto& iscore_cstr = scenario.constraint(curTimeRelationId);
+
             elementsProperties.constraints[curTimeRelationId].oldMin = iscore_cstr.duration.minDuration();
             elementsProperties.constraints[curTimeRelationId].oldMax = iscore_cstr.duration.maxDuration();
+
+            // if rigid, no question about min and max
+            // so we skip to the next constraint
+            if(iscore_cstr.duration.isRigid())
+            {
+                elementsProperties.constraints[curTimeRelationId].newMax = iscore_cstr.duration.defaultDuration();
+                elementsProperties.constraints[curTimeRelationId].newMin = iscore_cstr.duration.defaultDuration();
+                continue;
+            }
 
             auto& startTn = Scenario::startTimeNode(scenario.constraint(curTimeRelationId), scenario);
             auto& endTn = Scenario::endTimeNode(scenario.constraint(curTimeRelationId), scenario);
