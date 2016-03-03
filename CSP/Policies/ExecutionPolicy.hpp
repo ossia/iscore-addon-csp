@@ -36,7 +36,8 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
         CSP::ScenarioModel* m_cspScenario{};
         QVector<Id<Scenario::TimeNodeModel>> m_pastTimeNodes;
 
-        QSet<Id<Scenario::TimeNodeModel>> m_tnToUpdate; // can be computed as soon as possible
+        QSet<Id<Scenario::TimeNodeModel>> m_tnToUpdate; // for this step
+        QSet<Id<Scenario::TimeNodeModel>> m_tnNextStep; // can be computed as soon as possible
         QSet<Id<Scenario::TimeNodeModel>> m_waitingTn; // are waiting for some previous constraints
         QSet<Id<Scenario::ConstraintModel>> m_cstrToUpdateBack;
 };
