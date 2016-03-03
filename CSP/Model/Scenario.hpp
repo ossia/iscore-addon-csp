@@ -56,8 +56,6 @@ public:
 
     TimeNodeModel* getStartTimeNode() const;
 
-    TimeNodeModel* getEndTimeNode() const;
-
     const Scenario::ScenarioInterface* getScenario() const;
 
     TimeNodeModel* insertTimenode(

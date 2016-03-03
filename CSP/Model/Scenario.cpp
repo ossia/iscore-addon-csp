@@ -17,7 +17,7 @@ ScenarioModel::ScenarioModel(
 {
     this->setObjectName("CSPScenario");
 
-    // ensure that start then end timenode are stored first of all
+    // ensure that start timenode is stored first of all
     m_startTimeNode = insertTimenode(scenario.startTimeNode().id());
 
     // insert existing timenodes

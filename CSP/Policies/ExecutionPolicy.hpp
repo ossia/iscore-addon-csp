@@ -14,11 +14,11 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
     public:
         ExecutionPolicy() = default;
 
-        ExecutionPolicy(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements);
+        ExecutionPolicy(Scenario::ScenarioModel& scenario, Scenario::ElementsProperties& elementsProperties);
 
         void
         computeDisplacement(
-                const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements,
+                const Id<Scenario::TimeNodeModel>& positionnedElement,
                 Scenario::ElementsProperties& elementsProperties) override;
 
     protected:
@@ -27,7 +27,18 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
                                  const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements);
 
     private:
+        void updateTnInit(Scenario::ElementsProperties& elementsProperties);
+        void tnUpdated(Scenario::ElementsProperties& elementsProperties);
+        void tnWaiting(Scenario::ElementsProperties& elementsProperties);
+        void cstrUpdatedBackward(Scenario::ElementsProperties& elementsProperties);
+
         Scenario::ScenarioModel& m_scenario;
+        CSP::ScenarioModel* m_cspScenario{};
+        QVector<Id<Scenario::TimeNodeModel>> m_pastTimeNodes;
+
+        QSet<Id<Scenario::TimeNodeModel>> m_tnToUpdate; // can be computed as soon as possible
+        QSet<Id<Scenario::TimeNodeModel>> m_waitingTn; // are waiting for some previous constraints
+        QSet<Id<Scenario::ConstraintModel>> m_cstrToUpdateBack;
 };
 
 }

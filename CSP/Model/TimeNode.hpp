@@ -2,6 +2,7 @@
 
 #include <Process/TimeValue.hpp>
 #include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <iscore/tools/SettableIdentifier.hpp>
 #include <CSP/Model/tools/ConstraintHolder.hpp>
 
@@ -9,12 +10,6 @@
 #include <QVector>
 
 #include "Scenario.hpp"
-
-
-namespace Scenario
-{
-class TimeNodeModel;
-}
 
 namespace CSP
 {
@@ -42,10 +37,20 @@ public:
      */
     bool dateChanged() const;
 
+    const auto nextConstraints() const { return m_nextConstraints;}
+    const auto prevConstraints() const { return m_prevConstraints;}
+    const Id<Scenario::TimeNodeModel>& id() const {return m_id;}
+
 private:
     kiwi::Variable m_date{"date"};
     const TimeValue* m_iscoreDate;
 
     void onDateChanged(const TimeValue& date);
+
+    // use during scenario execution
+    std::list<Id<Scenario::ConstraintModel>> m_nextConstraints;
+    std::list<Id<Scenario::ConstraintModel>> m_prevConstraints;
+    const Id<Scenario::TimeNodeModel>& m_id;
+
 };
 }

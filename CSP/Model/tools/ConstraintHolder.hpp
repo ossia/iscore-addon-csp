@@ -9,9 +9,10 @@ namespace CSP
 {
 class ConstraintHolder : public QObject
 {
+    Q_OBJECT
 public:
 
-    using QObject::QObject;
+//    using QObject::QObject;
     ConstraintHolder(kiwi::Solver& solver, QObject* parent)
         :QObject::QObject{parent},
           m_solver(solver)

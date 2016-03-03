@@ -12,7 +12,8 @@ namespace CSP
 TimeRelationModel::TimeRelationModel(
         ScenarioModel& cspScenario,
         const Id<Scenario::ConstraintModel>& constraintId):
-    ConstraintHolder::ConstraintHolder(cspScenario.getSolver(), &cspScenario)
+    ConstraintHolder::ConstraintHolder(cspScenario.getSolver(), &cspScenario),
+    m_id{constraintId}
 {
     this->setParent(&cspScenario);
     this->setObjectName("CSPTimeRelation");
@@ -41,6 +42,9 @@ TimeRelationModel::TimeRelationModel(
 
     auto& prevTimenodeModel = startTimeNode(constraint, scenario);
     auto& nextTimenodeModel = endTimeNode(constraint, scenario);
+
+    m_start = prevTimenodeModel.id();
+    m_end = nextTimenodeModel.id();
 
     //retrieve/create prev and next timenode
     auto prevCSPTimenode = cspScenario.insertTimenode(prevTimenodeModel.id());

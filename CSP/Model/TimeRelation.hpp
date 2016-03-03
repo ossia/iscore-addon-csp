@@ -52,6 +52,11 @@ public:
      */
     bool maxChanged() const;
 
+
+    const Id<Scenario::ConstraintModel>& id() const { return m_id;}
+    auto startTn() const {return m_start;}
+    auto endTn() const {return m_end;}
+
 private:
     kiwi::Variable m_min{"min"};
     TimeValue m_iscoreMin{};
@@ -69,5 +74,9 @@ private:
     void onProcessRemoved(const Process::ProcessModel& process);
 
     QHash<Id<Process::ProcessModel>, ScenarioModel*> m_subScenarios;
+
+    Id<Scenario::TimeNodeModel> m_start;
+    Id<Scenario::TimeNodeModel> m_end;
+    const Id<Scenario::ConstraintModel>& m_id;
 };
 }
