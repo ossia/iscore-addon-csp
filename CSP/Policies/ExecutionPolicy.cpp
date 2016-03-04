@@ -11,9 +11,12 @@
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/Event/ExecutionStatus.hpp>
 
+#include <limits>
+
 
 namespace CSP
 {
+double Infinity = std::numeric_limits<double>::infinity();
 
 ExecutionPolicy::ExecutionPolicy(Scenario::ScenarioModel& scenario, Scenario::ElementsProperties& elementsProperties):
     m_scenario{scenario}
@@ -26,12 +29,13 @@ ExecutionPolicy::ExecutionPolicy(Scenario::ScenarioModel& scenario, Scenario::El
         elementsProperties.constraints[cstr.id()].maxInfinite = m_scenario.constraint(cstr.id()).duration.maxDuration().isInfinite();
         if(!elementsProperties.constraints[cstr.id()].maxInfinite)
             elementsProperties.constraints[cstr.id()].max = m_scenario.constraint(cstr.id()).duration.maxDuration().msec();
+        else
+            elementsProperties.constraints[cstr.id()].max = Infinity;
     }
 
     m_tnToUpdate.insert(m_scenario.startTimeNode().id());
 
-    elementsProperties.timenodes[m_scenario.startTimeNode().id()].maxInfinite = false;
-    elementsProperties.timenodes[m_scenario.startTimeNode().id()].dateMax = 0;
+    elementsProperties.timenodes[m_scenario.startTimeNode().id()].newAbsoluteMax = 0;
 
     while(m_tnToUpdate.size() != 0 || m_waitingTn.size() != 0 || m_cstrToUpdateBack.size() != 0)
     {
@@ -79,7 +83,7 @@ void ExecutionPolicy::computeDisplacement(const Id<Scenario::TimeNodeModel>& pos
     m_pastTimeNodes.push_back(positionnedElement);
     m_tnToUpdate.insert(positionnedElement);
 
-    qDebug() << "\n ***** new computation *****";
+    qDebug() << "\n ***** new computation : TN" << positionnedElement << " *****";
     while(m_tnToUpdate.size() != 0 || m_waitingTn.size() != 0 || m_cstrToUpdateBack.size() != 0)
     {
         qDebug() << " ---- main loop ----";
@@ -179,12 +183,27 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
 
         else // tn not happened
         {
+            if(tnProperties.token.state == Scenario::TokenState::Backward)
+            {
+                for(auto cstrId : timenode->nextConstraints())
+                {
+                    auto& cstrProp = elementsProperties.constraints[cstrId];
+                    if(cstrProp.hasToken())
+                    {
+                        TimeRelationModel* cstr = m_cspScenario->m_timeRelations[cstrId];
+                        if(cstrProp.token.deltaMax == -Infinity)
+                            tnProperties.newAbsoluteMax =  elementsProperties.timenodes[cstr->endTn()].newAbsoluteMax - cstrProp.min;
+                    }
+                }
+            }
+
             for(auto cstrId : timenode->prevConstraints())
             {
                 auto& cstrProp = elementsProperties.constraints[cstrId];
                 // take the more restrive deltaMin and deltaMax
                 if(cstrProp.hasToken())
                 {
+                    qDebug() << "receive " << cstrProp.token.deltaMin<< cstrProp.token.deltaMax << " from " << cstrId;
                     tnProperties.token.deltaMin = std::max(tnProperties.token.deltaMin,
                                                             cstrProp.token.deltaMin);
 
@@ -201,22 +220,13 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
                             tnProperties.newAbsoluteMin,
                             elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin + cstrProp.min);
 
-                    // infinity is not a constraint
-                    if(!cstrProp.maxInfinite && !elementsProperties.timenodes[constraint->startTn()].maxInfinite)
-                    {
-                        if(!tnProperties.maxInfinite)
-                        {
-                            tnProperties.newAbsoluteMax = std::min(
-                                    tnProperties.newAbsoluteMax,
-                                    elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max);
-                        }
-                        else
-                        {
-                            tnProperties.maxInfinite = false;
-                            tnProperties.newAbsoluteMax =
-                                    elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max;
-                        }
-                    }
+                    if(tnProperties.newAbsoluteMax == Infinity)
+                        tnProperties.newAbsoluteMax = elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max;
+                    else if(elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max != Infinity)
+                        tnProperties.newAbsoluteMax = std::min(
+                                tnProperties.newAbsoluteMax,
+                                elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max);
+
                 }
                 // clear old token
                 if(cstrProp.token.state == Scenario::TokenState::Forward)
@@ -228,7 +238,13 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
 
         // now apply this deltas to real absolute min and max
         // we check coherency before because tn can be previously correctly set by a backward action
-        if(tnProperties.newAbsoluteMin + tnProperties.token.deltaMin <= tnProperties.newAbsoluteMax + tnProperties.token.deltaMax)
+
+        qDebug() << "tn before :" << timenode->id() << tnProperties.newAbsoluteMin << tnProperties.newAbsoluteMax;
+        if(tnProperties.token.deltaMax == -Infinity)
+        {
+            tnProperties.newAbsoluteMin += tnProperties.token.deltaMin;
+        }
+        else if(tnProperties.newAbsoluteMin + tnProperties.token.deltaMin <= tnProperties.newAbsoluteMax + tnProperties.token.deltaMax)
         {
             tnProperties.newAbsoluteMin += tnProperties.token.deltaMin;
             tnProperties.newAbsoluteMax += tnProperties.token.deltaMax;
@@ -266,14 +282,18 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
                     m_cstrToUpdateBack.insert(cstrId);
                 }
 
-                auto deltaMax = tnProperties.newAbsoluteMax -
-                                (cstrProp.max + elementsProperties.timenodes[startTn.id()].newAbsoluteMax);
-                if(deltaMax < -0)
+                if(tnProperties.newAbsoluteMax != Infinity) // if infinity, no constraint to send back
                 {
-                    cstrProp.token.state = Scenario::TokenState::Backward;
-                    cstrProp.token.deltaMax = deltaMax;
+                    auto deltaMax = tnProperties.newAbsoluteMax -
+                                (cstrProp.max + elementsProperties.timenodes[startTn.id()].newAbsoluteMax);
 
-                    m_cstrToUpdateBack.insert(cstrId);
+                    if(deltaMax < 0)
+                    {
+                        cstrProp.token.state = Scenario::TokenState::Backward;
+                        cstrProp.token.deltaMax = deltaMax;
+
+                        m_cstrToUpdateBack.insert(cstrId);
+                    }
                 }
             }
         }
@@ -289,7 +309,7 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
                 cstrProp.token.deltaMax = tnProperties.token.deltaMax;
 
                 auto& endTn = Scenario::endTimeNode(m_scenario.constraint(cstrId), m_scenario);
-//                qDebug() << "forward token " << timenode->id() << endTn.id();
+                qDebug() << "send " << cstrProp.token.deltaMin << cstrProp.token.deltaMax << " to " <<  endTn.id();
                 m_tnNextStep.insert(endTn.id());
             }
             else if (cstrProp.token.state == Scenario::TokenState::Backward)
@@ -350,11 +370,17 @@ void ExecutionPolicy::cstrUpdatedBackward(Scenario::ElementsProperties& elements
     if(m_pastTimeNodes.contains(constraint->startTn()) || constraint->startTn() == m_cspScenario->getStartTimeNode()->id())
     {
         cstrProperties.min += cstrProperties.token.deltaMin;
-        cstrProperties.max += cstrProperties.token.deltaMax;
+
+        if(cstrProperties.token.deltaMax != -Infinity) // since startTn is fixed, token inf means constraintMax inf
+            cstrProperties.max += cstrProperties.token.deltaMax;
+        else // inf token : inf constraintMax
+        {
+            cstrProperties.max = elementsProperties.timenodes[constraint->endTn()].newAbsoluteMax - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin;
+        }
 
         qDebug() << "cstr :" << constraint->id() << cstrProperties.min << cstrProperties.max;
 
-        ISCORE_ASSERT(cstrProperties.min -200 <= cstrProperties.max);
+        ISCORE_ASSERT(cstrProperties.min -200 <= cstrProperties.max); // TODO rustine
      }
     // if constraint min - max can not absorbe deltas, transmit to startTn
     else if(delta < cstrProperties.token.deltaMin ||
@@ -363,12 +389,27 @@ void ExecutionPolicy::cstrUpdatedBackward(Scenario::ElementsProperties& elements
         auto& tnProp = elementsProperties.timenodes[constraint->startTn()];
         tnProp.token.state = Scenario::TokenState::Backward;
         tnProp.token.deltaMin = std::max(0., cstrProperties.token.deltaMin - delta);
-        tnProp.token.deltaMax = std::min(0., cstrProperties.token.deltaMax + delta);
+
+        if(cstrProperties.token.deltaMax == -Infinity)
+            tnProp.token.deltaMax = cstrProperties.token.deltaMax;
+        else
+            tnProp.token.deltaMax = std::min(0., cstrProperties.token.deltaMax + delta);
 
         m_waitingTn.insert(constraint->startTn());
     }
     else
+    {
         qDebug() << constraint->id() << "aborsbing deltas";
+/*        cstrProperties.min = std::max(cstrProperties.min,
+                    elementsProperties.timenodes[constraint->endTn()].newAbsoluteMin - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax);
+        if(cstrProperties.max == Infinity)
+            cstrProperties.max = elementsProperties.timenodes[constraint->endTn()].newAbsoluteMax
+                                 - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin;
+        else
+            cstrProperties.max = std::min(cstrProperties.max,
+                        elementsProperties.timenodes[constraint->endTn()].newAbsoluteMax - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin);
+*/
+    }
 }
 
 
