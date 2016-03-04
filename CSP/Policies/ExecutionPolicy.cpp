@@ -79,13 +79,13 @@ void ExecutionPolicy::computeDisplacement(const Id<Scenario::TimeNodeModel>& pos
     m_pastTimeNodes.push_back(positionnedElement);
     m_tnToUpdate.insert(positionnedElement);
 
-    qDebug() << "new computation";
+    qDebug() << "\n ***** new computation *****";
     while(m_tnToUpdate.size() != 0 || m_waitingTn.size() != 0 || m_cstrToUpdateBack.size() != 0)
     {
         qDebug() << " ---- main loop ----";
         while(!m_tnToUpdate.empty())
         {
-            qDebug() << " -- updateTn loop --" << m_tnToUpdate.size();
+            qDebug() << " -- updateTn loop --";
             auto n = m_tnToUpdate.size();
             for(int i = 0; i<n; i++)
             {
@@ -188,8 +188,6 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
                     tnProperties.token.deltaMin = std::max(tnProperties.token.deltaMin,
                                                             cstrProp.token.deltaMin);
 
-                    qDebug() << "receive" << timenode->id() << cstrProp.token.deltaMax << tnProperties.token.deltaMax;
-
                     tnProperties.token.deltaMax = std::min(tnProperties.token.deltaMax,
                                                             cstrProp.token.deltaMax);
                 }
@@ -229,9 +227,12 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
         }
 
         // now apply this deltas to real absolute min and max
-        tnProperties.newAbsoluteMin += tnProperties.token.deltaMin;
-        tnProperties.newAbsoluteMax += tnProperties.token.deltaMax;
-
+        // we check coherency before because tn can be previously correctly set by a backward action
+        if(tnProperties.newAbsoluteMin + tnProperties.token.deltaMin <= tnProperties.newAbsoluteMax + tnProperties.token.deltaMax)
+        {
+            tnProperties.newAbsoluteMin += tnProperties.token.deltaMin;
+            tnProperties.newAbsoluteMax += tnProperties.token.deltaMax;
+        }
         qDebug() << "tn :" << timenode->id() << tnProperties.newAbsoluteMin << tnProperties.newAbsoluteMax;
 
         /***************************************************
@@ -257,7 +258,7 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
                 // token is send back
                 auto deltaMin = tnProperties.newAbsoluteMin -
                                 (cstrProp.min + elementsProperties.timenodes[startTn.id()].newAbsoluteMin);
-                if(deltaMin > 110)
+                if(deltaMin > 0)
                 {
                     cstrProp.token.state = Scenario::TokenState::Backward;
                     cstrProp.token.deltaMin = deltaMin;
@@ -267,7 +268,7 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
 
                 auto deltaMax = tnProperties.newAbsoluteMax -
                                 (cstrProp.max + elementsProperties.timenodes[startTn.id()].newAbsoluteMax);
-                if(deltaMax < -110)
+                if(deltaMax < -0)
                 {
                     cstrProp.token.state = Scenario::TokenState::Backward;
                     cstrProp.token.deltaMax = deltaMax;
@@ -280,7 +281,6 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
         // next constraints
         for(auto cstrId : timenode->nextConstraints())
         {
-            qDebug() << "next" << timenode->id() << cstrId;
             auto& cstrProp = elementsProperties.constraints[cstrId];
             if(!cstrProp.hasToken())
             {
@@ -289,6 +289,7 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
                 cstrProp.token.deltaMax = tnProperties.token.deltaMax;
 
                 auto& endTn = Scenario::endTimeNode(m_scenario.constraint(cstrId), m_scenario);
+//                qDebug() << "forward token " << timenode->id() << endTn.id();
                 m_tnNextStep.insert(endTn.id());
             }
             else if (cstrProp.token.state == Scenario::TokenState::Backward)
@@ -366,6 +367,8 @@ void ExecutionPolicy::cstrUpdatedBackward(Scenario::ElementsProperties& elements
 
         m_waitingTn.insert(constraint->startTn());
     }
+    else
+        qDebug() << constraint->id() << "aborsbing deltas";
 }
 
 
