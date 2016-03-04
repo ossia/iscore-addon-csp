@@ -41,6 +41,9 @@ public:
     const auto prevConstraints() const { return m_prevConstraints;}
     const Id<Scenario::TimeNodeModel>& id() const {return m_id;}
 
+    void addNextTimeRelation(Id<Scenario::ConstraintModel>);
+    void addPrevTimeRelation(Id<Scenario::ConstraintModel>);
+
 private:
     kiwi::Variable m_date{"date"};
     const TimeValue* m_iscoreDate;

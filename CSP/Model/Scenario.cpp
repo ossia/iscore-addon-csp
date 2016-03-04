@@ -2,8 +2,10 @@
 #include <CSP/Model/TimeNode.hpp>
 #include <CSP/Model/TimeRelation.hpp>
 #include <Scenario/Document/BaseScenario/BaseScenario.hpp>
+#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/ScenarioInterface.hpp>
+#include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <kiwi/kiwi.h>
 #include <QtAlgorithms>
 
@@ -116,6 +118,17 @@ ScenarioModel::on_constraintCreated(
 {
     //create the corresponding time relation
     m_timeRelations.insert(constraintModel.id(), new TimeRelationModel{*this, constraintModel.id()});
+
+    auto& tn = Scenario::startTimeNode(constraintModel, *m_scenario);
+    if(m_timeNodes.contains(tn.id()))
+    {
+        m_timeNodes[tn.id()]->addNextTimeRelation(constraintModel.id());
+    }
+    auto& endTn = Scenario::endTimeNode(constraintModel, *m_scenario);
+    if(m_timeNodes.contains(endTn.id()))
+    {
+        m_timeNodes[endTn.id()]->addPrevTimeRelation(constraintModel.id());
+    }
 }
 
 void

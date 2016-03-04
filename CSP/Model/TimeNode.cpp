@@ -60,6 +60,26 @@ bool TimeNodeModel::dateChanged() const
     return m_date.value() != m_iscoreDate->msec();
 }
 
+void TimeNodeModel::addNextTimeRelation(Id<Scenario::ConstraintModel> cstrId)
+{
+    for(auto it = m_nextConstraints.begin(); it != m_nextConstraints.end(); it++)
+    {
+        if(*it == cstrId)
+            return;
+    }
+    m_nextConstraints.push_back(cstrId);
+}
+
+void TimeNodeModel::addPrevTimeRelation(Id<Scenario::ConstraintModel> cstrId)
+{
+    for(auto it = m_prevConstraints.begin(); it != m_prevConstraints.end(); it++)
+    {
+        if(*it == cstrId)
+            return;
+    }
+    m_prevConstraints.push_back(cstrId);
+}
+
 void TimeNodeModel::onDateChanged(const TimeValue& date)
 {
     m_date.setValue(date.msec());
