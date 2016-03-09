@@ -33,40 +33,65 @@ ExecutionPolicy::ExecutionPolicy(Scenario::ScenarioModel& scenario, Scenario::El
             elementsProperties.constraints[cstr.id()].max = Infinity;
     }
 
-    m_tnToUpdate.insert(m_scenario.startTimeNode().id());
 
     elementsProperties.timenodes[m_scenario.startTimeNode().id()].newAbsoluteMax = 0;
 
-    while(m_tnToUpdate.size() != 0 || m_waitingTn.size() != 0 || m_cstrToUpdateBack.size() != 0)
+    bool b = false;
+
+    do
     {
-        qDebug() << " ---- main loop ----";
-        while(!m_tnToUpdate.empty())
+        qDebug() << "****** new ********* ";
+        m_tnToUpdate.insert(m_scenario.startTimeNode().id());
+        b = false;
+        while(m_tnToUpdate.size() != 0 || m_waitingTn.size() != 0 || m_cstrToUpdateBack.size() != 0)
         {
-            qDebug() << " -- updateTn loop --" << m_tnToUpdate.size();
-            auto n = m_tnToUpdate.size();
+            qDebug() << " ---- main loop ----";
+            while(!m_tnToUpdate.empty())
+            {
+                qDebug() << " -- updateTn loop --" << m_tnToUpdate.size();
+                auto n = m_tnToUpdate.size();
+                for(int i = 0; i<n; i++)
+                {
+                    qDebug() << "updating " << *m_tnToUpdate.begin();
+                    updateTnInit(elementsProperties);
+                    if(!m_cstrToUpdateBack.empty())
+                        break;
+                }
+                if(!m_cstrToUpdateBack.empty())
+                {
+                    m_tnToUpdate.clear();
+                    m_tnNextStep.clear();
+                    break;
+                }
+
+                m_tnToUpdate = m_tnNextStep;
+                m_tnNextStep.clear();
+            }
+/*            auto n = m_waitingTn.size();
             for(int i = 0; i<n; i++)
             {
-                qDebug() << "updating " << *m_tnToUpdate.begin();
-                tnUpdated(elementsProperties);
+                qDebug() << "check waiting " << *m_waitingTn.begin();
+                tnWaiting(elementsProperties);
             }
-            m_tnToUpdate = m_tnNextStep;
-            m_tnNextStep.clear();
+*/          m_waitingTn.clear();
+            while(!m_cstrToUpdateBack.empty())
+            {
+                qDebug() << "backward " << *m_cstrToUpdateBack.begin();
+                b = cstrUpdatedBackwardInit(elementsProperties) || b;
+            }
         }
-        auto n = m_waitingTn.size();
-        for(int i = 0; i<n; i++)
+        for(auto& t : m_scenario.timeNodes)
         {
-            qDebug() << "check waiting " << *m_waitingTn.begin();
-            tnWaiting(elementsProperties);
+            elementsProperties.timenodes[t.id()].token.disable();
         }
-        n = m_cstrToUpdateBack.size();
-        for(int i = 0; i<n; i++)
+        for(auto& c : m_scenario.constraints)
         {
-            qDebug() << "backward " << *m_cstrToUpdateBack.begin();
-            cstrUpdatedBackward(elementsProperties);
+            elementsProperties.constraints[c.id()].token.disable();
         }
     }
+    while(b);
 
-    qDebug() << "recap :";
+    qDebug() << "\n ***** recap :";
     for(auto& cstr : m_scenario.constraints)
     {
         qDebug() << cstr.id() << elementsProperties.constraints[cstr.id()].min << elementsProperties.constraints[cstr.id()].max;
@@ -79,7 +104,12 @@ void ExecutionPolicy::computeDisplacement(const Id<Scenario::TimeNodeModel>& pos
                                           Scenario::ElementsProperties& elementsProperties)
 {
 //*
+
     m_tnToUpdate.clear();
+    m_tnNextStep.clear();
+    m_cstrToUpdateBack.clear();
+    m_waitingTn.clear();
+
     m_pastTimeNodes.push_back(positionnedElement);
     m_tnToUpdate.insert(positionnedElement);
 
@@ -124,7 +154,185 @@ void ExecutionPolicy::refreshStays(ScenarioModel& cspScenario,
 
 void ExecutionPolicy::updateTnInit(Scenario::ElementsProperties& elementsProperties)
 {
+    TimeNodeModel* timenode = m_cspScenario->m_timeNodes[*m_tnToUpdate.begin()];
+    bool allTokens = true;
 
+    // only the first tn has no prev cstr, so allTokens will be true in this case
+    for(auto cstrId : timenode->prevConstraints())
+    {
+        if(!elementsProperties.constraints[cstrId].hasToken())
+        {
+            allTokens = false;
+            break;
+        }
+    }
+
+    /*
+     * Update containers
+     */
+    auto it = m_waitingTn.find(timenode->id());
+    if(it != m_waitingTn.end())
+        m_waitingTn.erase(it); // tn is no more waiting
+
+    m_tnToUpdate.erase(m_tnToUpdate.find(timenode->id())); // tn is computed now
+
+    auto& tnProperties = elementsProperties.timenodes[timenode->id()];
+
+    /* If :
+     * - any tn with all prev tokens (start has no one, so it has all too)
+     * - tn already has a token (when back computing or when compute waiting tn)
+     */
+    if(allTokens || tnProperties.hasToken())
+    {
+        /* **************************************************
+         * UPDATE TIMENODE TOKEN
+         * and update absoluteMin/Max in critical case
+         */
+
+        if(!tnProperties.hasToken())
+            tnProperties.token.state = Scenario::TokenState::Forward ;
+
+//            if(tnProperties.token.state == Scenario::TokenState::Backward)
+        {
+            for(auto cstrId : timenode->nextConstraints())
+            {
+                auto& cstrProp = elementsProperties.constraints[cstrId];
+                if(cstrProp.hasToken())
+                {
+                    TimeRelationModel* cstr = m_cspScenario->m_timeRelations[cstrId];
+                    // if current branch has an infinite max but join another with a finite max, the backward max token is -inf
+                    if(cstrProp.token.deltaMax == -Infinity)
+                    {
+                        tnProperties.newAbsoluteMax =  std::min(tnProperties.newAbsoluteMax, // may have many backward token
+                                                                elementsProperties.timenodes[cstr->endTn()].newAbsoluteMax - cstrProp.min);
+                        ISCORE_ASSERT(tnProperties.newAbsoluteMin - 200 < tnProperties.newAbsoluteMax);
+                    }
+                }
+            }
+        }
+
+        if(allTokens)
+            for(auto cstrId : timenode->prevConstraints())
+            {
+                auto& cstrProp = elementsProperties.constraints[cstrId];
+                auto constraint = m_cspScenario->m_timeRelations[cstrId];
+
+                tnProperties.newAbsoluteMin = std::max(
+                        tnProperties.newAbsoluteMin,
+                        elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin + cstrProp.min);
+
+                tnProperties.newAbsoluteMax = std::min(
+                        tnProperties.newAbsoluteMax,
+                        elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max);
+
+                ISCORE_ASSERT(tnProperties.newAbsoluteMin - 200 < tnProperties.newAbsoluteMax);
+
+                // clear old token
+                if(cstrProp.token.state == Scenario::TokenState::Forward)
+                {
+                    cstrProp.token.disable();
+                }
+            }
+
+        /* **************************************************
+         * APPLY DELTAS
+         * to real absolute min and max
+         * we check coherency before because tn can be previously correctly set by a backward action
+         */
+        qDebug() << "tn before :" << timenode->id() << tnProperties.newAbsoluteMin << tnProperties.newAbsoluteMax;
+        if(tnProperties.token.deltaMax == -Infinity)
+        {
+            tnProperties.newAbsoluteMin += tnProperties.token.deltaMin;
+            // max is handled before
+        }
+        else if(tnProperties.newAbsoluteMin + tnProperties.token.deltaMin <= tnProperties.newAbsoluteMax + tnProperties.token.deltaMax)
+        {
+            tnProperties.newAbsoluteMin += tnProperties.token.deltaMin;
+            tnProperties.newAbsoluteMax += tnProperties.token.deltaMax;
+        }
+        // TODO what if else ? Is it possible ?
+        else
+        {
+            qDebug() << "hmm, it's embarrassing ... (try to set min > max for tn)";
+            ISCORE_ABORT;
+        }
+        qDebug() << "tn :" << timenode->id() << tnProperties.newAbsoluteMin << tnProperties.newAbsoluteMax;
+        ISCORE_ASSERT(tnProperties.newAbsoluteMin - 200 < tnProperties.newAbsoluteMax);
+
+
+        /***************************************************
+         * TRANSMIT TO CONSTRAINTS
+         */
+
+        bool coherent = true;
+        // previous constraints
+        for(auto cstrId : timenode->prevConstraints())
+        {
+            auto& cstrProp = elementsProperties.constraints[cstrId];
+            auto& startTn = Scenario::startTimeNode(m_scenario.constraint(cstrId), m_scenario);
+
+            // ------------------------------------------
+            // if timenode min/max are more restrictive than this branch
+            // token is send back
+            auto deltaMin = tnProperties.newAbsoluteMin -
+                            (cstrProp.min + elementsProperties.timenodes[startTn.id()].newAbsoluteMin);
+            if(deltaMin > 0)
+            {
+                cstrProp.token.state = Scenario::TokenState::Backward;
+                cstrProp.token.deltaMin = deltaMin;
+
+                m_cstrToUpdateBack.insert(cstrId);
+                coherent = false;
+            }
+
+            if(tnProperties.newAbsoluteMax != Infinity) // if infinity, no constraint to send back
+            {
+                auto deltaMax = tnProperties.newAbsoluteMax -
+                            (cstrProp.max + elementsProperties.timenodes[startTn.id()].newAbsoluteMax);
+
+                if(deltaMax < 0)
+                {
+                    cstrProp.token.state = Scenario::TokenState::Backward;
+                    cstrProp.token.deltaMax = deltaMax;
+
+                    m_cstrToUpdateBack.insert(cstrId);
+                    coherent = false;
+                }
+            }
+        }
+
+        if(coherent)
+            // next constraints "commit" changes to all next constraints
+            for(auto cstrId : timenode->nextConstraints())
+            {
+                auto& cstrProp = elementsProperties.constraints[cstrId];
+                cstrProp.token.state = Scenario::TokenState::Forward;
+                if(!cstrProp.hasToken())
+                {
+                    cstrProp.token.deltaMin = tnProperties.token.deltaMin;
+                    cstrProp.token.deltaMax = tnProperties.token.deltaMax;
+                }
+                else
+                {
+                    cstrProp.token.deltaMin = 0;
+                    cstrProp.token.deltaMax = 0;
+                }
+                auto& endTn = Scenario::endTimeNode(m_scenario.constraint(cstrId), m_scenario);
+                qDebug() << "send " << cstrProp.token.deltaMin << cstrProp.token.deltaMax << " to " <<  endTn.id();
+
+                if(m_tnNextStep.find(endTn.id()) == m_tnNextStep.end()) // insert unique
+                    m_tnNextStep.insert(endTn.id());
+            }
+
+        // Clear timenode token
+        tnProperties.token.disable();
+    }
+    else
+    {
+        // tn must wait
+        if(m_waitingTn.find(timenode->id()) == m_waitingTn.end())
+            m_waitingTn.insert(timenode->id());
+    }
 }
 
 void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties)
@@ -138,7 +346,6 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
         if(!elementsProperties.constraints[cstrId].hasToken())
         {
             allTokens = false;
-
             break;
         }
     }
@@ -146,10 +353,9 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
     auto& tnProperties = elementsProperties.timenodes[timenode->id()];
 
     /* If :
-     * - any tn with all prev tokens
-     * - first tn (= the only one with no prev cstr)
+     * - any tn with all prev tokens (start has no one, so it has all too)
      * - happened tn (like last happened tn)
-     * - tn already has a token (when back computing)
+     * - tn already has a token (when back computing or when compute waiting tn)
      */
     if(allTokens || m_pastTimeNodes.contains(timenode->id()) || tnProperties.hasToken())
     {
@@ -163,10 +369,8 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
 
 
         /* **************************************************
-         * INIT TIMENODE VALUES
-         * - create a token
-         * - compute new min and max in token
-         * - update newAbsoluteMin/Max
+         * UPDATE TIMENODE TOKEN
+         * and update absoluteMin/Max in critical case
          */
 
         if(!tnProperties.hasToken())
@@ -183,7 +387,7 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
 
         else // tn not happened
         {
-            if(tnProperties.token.state == Scenario::TokenState::Backward)
+//            if(tnProperties.token.state == Scenario::TokenState::Backward)
             {
                 for(auto cstrId : timenode->nextConstraints())
                 {
@@ -191,8 +395,10 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
                     if(cstrProp.hasToken())
                     {
                         TimeRelationModel* cstr = m_cspScenario->m_timeRelations[cstrId];
+                        // if current branch has an infinite max but join another with a finite max, the backward max token is -inf
                         if(cstrProp.token.deltaMax == -Infinity)
-                            tnProperties.newAbsoluteMax =  elementsProperties.timenodes[cstr->endTn()].newAbsoluteMax - cstrProp.min;
+                            tnProperties.newAbsoluteMax =  std::min(tnProperties.newAbsoluteMax, // may have many backward token
+                                                                    elementsProperties.timenodes[cstr->endTn()].newAbsoluteMax - cstrProp.min);
                     }
                 }
             }
@@ -200,6 +406,7 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
             for(auto cstrId : timenode->prevConstraints())
             {
                 auto& cstrProp = elementsProperties.constraints[cstrId];
+                auto constraint = m_cspScenario->m_timeRelations[cstrId];
                 // take the more restrive deltaMin and deltaMax
                 if(cstrProp.hasToken())
                 {
@@ -209,23 +416,23 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
 
                     tnProperties.token.deltaMax = std::min(tnProperties.token.deltaMax,
                                                             cstrProp.token.deltaMax);
+
+                    if(tnProperties.token.deltaMax == -Infinity) // using deltaMax will not be satisfying, so we compute "by hand"
+                        tnProperties.newAbsoluteMax = std::min(tnProperties.newAbsoluteMax,
+                                                               elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max);
                 }
 
+                // TODO : create specific algo for init
                 /* = if init phase, init newAbsolute values */
                 if(m_pastTimeNodes.size() == 0)
                 {
-                    auto constraint = m_cspScenario->m_timeRelations[cstrId];
-
                     tnProperties.newAbsoluteMin = std::max(
                             tnProperties.newAbsoluteMin,
                             elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin + cstrProp.min);
 
-                    if(tnProperties.newAbsoluteMax == Infinity)
-                        tnProperties.newAbsoluteMax = elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max;
-                    else if(elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max != Infinity)
-                        tnProperties.newAbsoluteMax = std::min(
-                                tnProperties.newAbsoluteMax,
-                                elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max);
+                    tnProperties.newAbsoluteMax = std::min(
+                            tnProperties.newAbsoluteMax,
+                            elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax + cstrProp.max);
 
                 }
                 // clear old token
@@ -236,27 +443,38 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
             }
         }
 
-        // now apply this deltas to real absolute min and max
-        // we check coherency before because tn can be previously correctly set by a backward action
-
+        /* **************************************************
+         * APPLY DELTAS
+         * to real absolute min and max
+         * we check coherency before because tn can be previously correctly set by a backward action
+         */
         qDebug() << "tn before :" << timenode->id() << tnProperties.newAbsoluteMin << tnProperties.newAbsoluteMax;
         if(tnProperties.token.deltaMax == -Infinity)
         {
             tnProperties.newAbsoluteMin += tnProperties.token.deltaMin;
+            // max is handled before
         }
         else if(tnProperties.newAbsoluteMin + tnProperties.token.deltaMin <= tnProperties.newAbsoluteMax + tnProperties.token.deltaMax)
         {
             tnProperties.newAbsoluteMin += tnProperties.token.deltaMin;
             tnProperties.newAbsoluteMax += tnProperties.token.deltaMax;
         }
+        // TODO what if else ? Is it possible ?
+        else
+        {
+            qDebug() << "hmm, it's embarrassing ... (try to set min > max for tn)";
+        }
         qDebug() << "tn :" << timenode->id() << tnProperties.newAbsoluteMin << tnProperties.newAbsoluteMax;
 
+        if(!m_pastTimeNodes.empty())
+            ISCORE_ASSERT(tnProperties.newAbsoluteMin - 200 <= tnProperties.newAbsoluteMax);
         /***************************************************
          * TRANSMIT TO CONSTRAINTS
-         * assume a coherent system ?
          */
 
-        // don't transmit nul deltas if execution started
+        // don't transmit nul deltas if execution started,
+        // but before execution nul deltas mean init phase
+        // TODO move init in another function
         if(!m_pastTimeNodes.empty() && tnProperties.token.deltaMin == 0
                 && tnProperties.token.deltaMax == 0)
             return;
@@ -310,9 +528,10 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
 
                 auto& endTn = Scenario::endTimeNode(m_scenario.constraint(cstrId), m_scenario);
                 qDebug() << "send " << cstrProp.token.deltaMin << cstrProp.token.deltaMax << " to " <<  endTn.id();
-                m_tnNextStep.insert(endTn.id());
+                if(m_tnNextStep.find(endTn.id()) == m_tnNextStep.end()) // insert unique
+                    m_tnNextStep.insert(endTn.id());
             }
-            else if (cstrProp.token.state == Scenario::TokenState::Backward)
+            else
             {
                 cstrProp.token.disable();
             }
@@ -324,9 +543,9 @@ void ExecutionPolicy::tnUpdated(Scenario::ElementsProperties& elementsProperties
     else
     {
         // tn must wait
-        m_waitingTn.insert(timenode->id());
+        if(m_waitingTn.find(timenode->id()) == m_waitingTn.end())
+            m_waitingTn.insert(timenode->id());
     }
-
 }
 
 void ExecutionPolicy::tnWaiting(Scenario::ElementsProperties& elementsProperties)
@@ -358,6 +577,7 @@ void ExecutionPolicy::tnWaiting(Scenario::ElementsProperties& elementsProperties
 }
 
 void ExecutionPolicy::cstrUpdatedBackward(Scenario::ElementsProperties& elementsProperties)
+// true if constraint is updated
 {
     TimeRelationModel* constraint = m_cspScenario->m_timeRelations[*m_cstrToUpdateBack.begin()];
     m_cstrToUpdateBack.erase(m_cstrToUpdateBack.begin());
@@ -375,11 +595,13 @@ void ExecutionPolicy::cstrUpdatedBackward(Scenario::ElementsProperties& elements
             cstrProperties.max += cstrProperties.token.deltaMax;
         else // inf token : inf constraintMax
         {
-            cstrProperties.max = elementsProperties.timenodes[constraint->endTn()].newAbsoluteMax - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin;
+            cstrProperties.max = elementsProperties.timenodes[constraint->endTn()].newAbsoluteMax
+                                 - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin;
         }
 
         qDebug() << "cstr :" << constraint->id() << cstrProperties.min << cstrProperties.max;
 
+        // order is ensure by previous coherency
         ISCORE_ASSERT(cstrProperties.min -200 <= cstrProperties.max); // TODO rustine
      }
     // if constraint min - max can not absorbe deltas, transmit to startTn
@@ -388,183 +610,87 @@ void ExecutionPolicy::cstrUpdatedBackward(Scenario::ElementsProperties& elements
     {
         auto& tnProp = elementsProperties.timenodes[constraint->startTn()];
         tnProp.token.state = Scenario::TokenState::Backward;
-        tnProp.token.deltaMin = std::max(0., cstrProperties.token.deltaMin - delta);
 
-        if(cstrProperties.token.deltaMax == -Infinity)
-            tnProp.token.deltaMax = cstrProperties.token.deltaMax;
-        else
-            tnProp.token.deltaMax = std::min(0., cstrProperties.token.deltaMax + delta);
+        tnProp.token.deltaMin = std::max(tnProp.token.deltaMin, std::max(0., cstrProperties.token.deltaMin - delta));
+        tnProp.token.deltaMax = std::min(tnProp.token.deltaMax, std::min(0., cstrProperties.token.deltaMax + delta));
 
-        m_waitingTn.insert(constraint->startTn());
+        if(m_waitingTn.find(constraint->startTn()) == m_waitingTn.end())
+            m_waitingTn.insert(constraint->startTn());
     }
     else
     {
         qDebug() << constraint->id() << "aborsbing deltas";
 /*        cstrProperties.min = std::max(cstrProperties.min,
                     elementsProperties.timenodes[constraint->endTn()].newAbsoluteMin - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMax);
-        if(cstrProperties.max == Infinity)
-            cstrProperties.max = elementsProperties.timenodes[constraint->endTn()].newAbsoluteMax
-                                 - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin;
-        else
+
             cstrProperties.max = std::min(cstrProperties.max,
                         elementsProperties.timenodes[constraint->endTn()].newAbsoluteMax - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin);
 */
     }
 }
 
-
-}
-
-
-// old KIWI part
-/*
-namespace CSP
+bool ExecutionPolicy::cstrUpdatedBackwardInit(Scenario::ElementsProperties& elementsProperties)
 {
-ExecutionPolicy::ExecutionPolicy(
-        Scenario::ScenarioModel& scenario,
-        const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements):
-    m_scenario(scenario)
-{
-    // We set the system with i-score values
-    if(ScenarioModel* cspScenario = m_scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
+    bool cstrModified = false;
+    TimeRelationModel* constraint = m_cspScenario->m_timeRelations[*m_cstrToUpdateBack.begin()];
+    m_cstrToUpdateBack.erase(m_cstrToUpdateBack.begin());
+
+    TimeNodeModel* startTn = m_cspScenario->m_timeNodes[constraint->startTn()];
+
+    auto& cstrProperties = elementsProperties.constraints[constraint->id()];
+    auto& startTnProp = elementsProperties.timenodes[constraint->startTn()];
+
+    auto tnDelta = startTnProp.newAbsoluteMax - startTnProp.newAbsoluteMin;
+    auto tokenDelta = cstrProperties.token.deltaMin - cstrProperties.token.deltaMax;
+
+    // if tn can not absorbe delta, the current constraint has to be resize to send smaller token
+    if(tnDelta < tokenDelta)
     {
-        QHashIterator<Id<Scenario::ConstraintModel>, TimeRelationModel*> timeRelationIterator(cspScenario->m_timeRelations);
-        while(timeRelationIterator.hasNext())
+        startTnProp.token.state = Scenario::TokenState::Backward;
+
+        startTnProp.token.deltaMin = cstrProperties.token.deltaMin * tnDelta/tokenDelta;
+        startTnProp.token.deltaMax = cstrProperties.token.deltaMax * tnDelta/tokenDelta;
+
+        cstrProperties.min += cstrProperties.token.deltaMin - startTnProp.token.deltaMin;
+
+        if(cstrProperties.token.deltaMax != -Infinity) // since startTn is fixed, token inf means constraintMax inf
+            cstrProperties.max += cstrProperties.token.deltaMax - startTnProp.token.deltaMax;
+
+        else // inf token : inf constraintMax
         {
-            timeRelationIterator.next();
-
-            auto& curTimeRelationId = timeRelationIterator.key();
-            auto& curTimeRelation = timeRelationIterator.value();
-
-            auto initialMin = scenario.constraint(curTimeRelationId).duration.minDuration();
-            auto initialMax = scenario.constraint(curTimeRelationId).duration.maxDuration();
-
-            // - remove old stays
-            curTimeRelation->removeStays();
-
-            //add new stays
-            curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min == initialMin.msec(), kiwi::strength::strong));
-            if(!initialMax.isInfinite())
-                curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == initialMax.msec(), kiwi::strength::strong));
+            cstrProperties.max = elementsProperties.timenodes[constraint->endTn()].newAbsoluteMax
+                                 - elementsProperties.timenodes[constraint->startTn()].newAbsoluteMin;
         }
 
-        // time relations stays
-        auto& scenario = *cspScenario->getScenario();
+        qDebug() << "cstr :" << constraint->id() << cstrProperties.min << cstrProperties.max;
 
-        //time node stays
-        // - in timenodes :
-        QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario->m_timeNodes);
-        while (timeNodeIterator.hasNext())
-        {
-            timeNodeIterator.next();
+        // order is ensure by previous coherency
+        ISCORE_ASSERT(cstrProperties.min -200 <= cstrProperties.max); // TODO rustine
 
-            auto& curTimeNodeId = timeNodeIterator.key();
-            auto& curCspTimeNode = timeNodeIterator.value();
-
-            // try to stay on initial value
-            auto initialDate = scenario.timeNode(curTimeNodeId).date();
-
-            // - remove old stays
-            curCspTimeNode->removeStays();
-
-            // - add new stays
-            curCspTimeNode->addStay(new kiwi::Constraint(
-                                        curCspTimeNode->m_date == initialDate.msec(),
-                                        kiwi::strength::weak));
-        }
-    }
-}
-
-void ExecutionPolicy::computeDisplacement(const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements,
-                                          Scenario::ElementsProperties& elementsProperties)
-{
-    try{
-    if(ScenarioModel* cspScenario = m_scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
+        cstrModified = true;
+     }
+    else
     {
-        refreshStays(*cspScenario, elementsProperties, positionnedElements);
+        startTnProp.token.state = Scenario::TokenState::Backward;
+
+        startTnProp.token.deltaMin = std::max(startTnProp.token.deltaMin, std::max(0., cstrProperties.token.deltaMin));
+        startTnProp.token.deltaMax = std::min(startTnProp.token.deltaMax, std::min(0., cstrProperties.token.deltaMax));
+
+        if(m_waitingTn.find(constraint->startTn()) == m_waitingTn.end())
+            m_waitingTn.insert(constraint->startTn());
+        cstrModified = true;
     }
 
-    updateConstraints(m_scenario, positionnedElements, elementsProperties);
-
-    }
-    catch(...)
-    {
-        qDebug() << "failed here";
-    }
-}
-
-void ExecutionPolicy::refreshStays(
-        ScenarioModel& cspScenario,
-        Scenario::ElementsProperties& elementsProperties,
-        const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements)
-{
-    auto& scenario = *cspScenario.getScenario();
-
-    //time node stays
-    // - in timenodes :
-    QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario.m_timeNodes);
-    while (timeNodeIterator.hasNext())
-    {
-        timeNodeIterator.next();
-
-
-        auto& curTimeNodeId = timeNodeIterator.key();
-        auto& curCspTimeNode = timeNodeIterator.value();
-        if(positionnedElements.contains(curTimeNodeId)) // last positioned tn
+    if(cstrModified)
+        for(auto cstr : startTn->prevConstraints())
         {
-            if(!elementsProperties.timenodes.contains(curTimeNodeId))
-            {
-                auto initialDate = scenario.timeNode(curTimeNodeId).date();
-                elementsProperties.timenodes[curTimeNodeId].newDate = initialDate;
-            }
-
-            curCspTimeNode->removeStays();
-            curCspTimeNode->addStay(new kiwi::Constraint(
-                                        curCspTimeNode->m_date ==  elementsProperties.timenodes[curTimeNodeId].newDate.msec(),
-                                        kiwi::strength::required));
-
-            auto& tn = m_scenario.timeNode(curTimeNodeId);
-            QVector<Id<Scenario::StateModel>> states; //= Scenario::states(tn, scenario);
-            for(auto& evId : tn.events())
-            {
-                auto& ev = scenario.event(evId);
-                states.append(ev.states());
-            }
-            for(auto stId : states)
-            {
-                auto& state = m_scenario.state(stId);
-                if(state.status() == Scenario::ExecutionStatus::Disposed)
-                {
-                    if(auto& cstr = state.nextConstraint())
-                        if(cspScenario.m_timeRelations.contains(cstr))
-                            cspScenario.m_timeRelations[cstr]->removeAllConstraints();
-                }
-            }
-        } // remove past constraints
-        else if(!positionnedElements.contains(curTimeNodeId))
-        {
-            auto& tn = m_scenario.timeNode(curTimeNodeId);
-            QVector<Id<Scenario::StateModel>> states; //= Scenario::states(tn, scenario);
-            for(auto& evId : tn.events())
-            {
-                auto& ev = scenario.event(evId);
-                states.append(ev.states());
-            }
-            for(auto stId : states)
-            {
-                auto& state = m_scenario.state(stId);
-                if(state.status() == Scenario::ExecutionStatus::Disposed)
-                {
-                    if(auto& cstr = state.nextConstraint())
-                        if(cspScenario.m_timeRelations.contains(cstr))
-                            cspScenario.m_timeRelations[cstr]->removeAllConstraints();
-                }
-            }
+            m_cstrToUpdateBack.insert(cstr);
+            elementsProperties.constraints[cstr].token.deltaMin = startTnProp.token.deltaMin;
+            elementsProperties.constraints[cstr].token.deltaMax = startTnProp.token.deltaMax;
         }
 
-    }
-
+    return true;
 }
 
+
 }
-*/

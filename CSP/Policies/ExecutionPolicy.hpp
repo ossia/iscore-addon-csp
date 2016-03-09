@@ -31,6 +31,7 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
         void tnUpdated(Scenario::ElementsProperties& elementsProperties);
         void tnWaiting(Scenario::ElementsProperties& elementsProperties);
         void cstrUpdatedBackward(Scenario::ElementsProperties& elementsProperties);
+        bool cstrUpdatedBackwardInit(Scenario::ElementsProperties& elementsProperties);
 
         Scenario::ScenarioModel& m_scenario;
         CSP::ScenarioModel* m_cspScenario{};

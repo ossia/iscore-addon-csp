@@ -37,8 +37,8 @@ public:
      */
     bool dateChanged() const;
 
-    const auto nextConstraints() const { return m_nextConstraints;}
-    const auto prevConstraints() const { return m_prevConstraints;}
+    auto nextConstraints() const { return m_nextConstraints;}
+    auto prevConstraints() const { return m_prevConstraints;}
     const Id<Scenario::TimeNodeModel>& id() const {return m_id;}
 
     void addNextTimeRelation(Id<Scenario::ConstraintModel>);
