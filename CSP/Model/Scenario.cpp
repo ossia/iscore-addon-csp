@@ -1,6 +1,7 @@
 #include <CSP/Model/Scenario.hpp>
 #include <CSP/Model/TimeNode.hpp>
 #include <CSP/Model/TimeRelation.hpp>
+#include <CSP/Model/Branch.hpp>
 #include <Scenario/Document/BaseScenario/BaseScenario.hpp>
 #include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
@@ -8,6 +9,8 @@
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <kiwi/kiwi.h>
 #include <QtAlgorithms>
+
+#include <queue>
 
 namespace CSP
 {
@@ -174,6 +177,7 @@ ScenarioModel::on_timeNodeRemoved(
 {
     delete(m_timeNodes.take(timeNode.id()));
 }
+
 
 const
 TimeNodeModel&

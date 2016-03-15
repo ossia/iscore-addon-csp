@@ -4,6 +4,7 @@
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <CSP/Model/TimeNode.hpp>
+#include <CSP/Model/Branch.hpp>
 #include <kiwi/kiwi.h>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 

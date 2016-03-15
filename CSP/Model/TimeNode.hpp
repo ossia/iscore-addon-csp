@@ -14,6 +14,7 @@
 namespace CSP
 {
 class DisplacementPolicy;
+class Branch;
 class TimeNodeModel : public ConstraintHolder
 {
     friend class DisplacementPolicy;
@@ -43,6 +44,11 @@ public:
 
     void addNextTimeRelation(Id<Scenario::ConstraintModel>);
     void addPrevTimeRelation(Id<Scenario::ConstraintModel>);
+
+    void removeNextTimeRelation(Id<Scenario::ConstraintModel>);
+    void removePrevTimeRelation(Id<Scenario::ConstraintModel>);
+
+    std::vector<Branch*> m_branches{};
 
 private:
     kiwi::Variable m_date{"date"};

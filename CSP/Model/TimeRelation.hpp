@@ -12,6 +12,7 @@
 namespace Scenario
 {
 class ConstraintModel;
+class Branch;
 }
 
 namespace CSP
@@ -56,6 +57,8 @@ public:
     const Id<Scenario::ConstraintModel>& id() const { return m_id;}
     auto startTn() const {return m_start;}
     auto endTn() const {return m_end;}
+
+    std::vector<Branch*> m_branches{};
 
 private:
     kiwi::Variable m_min{"min"};

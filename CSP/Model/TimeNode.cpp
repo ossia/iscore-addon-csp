@@ -3,6 +3,7 @@
 
 #include <Scenario/Process/ScenarioInterface.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
+#include <CSP/Model/Branch.hpp>
 
 namespace CSP
 {
@@ -78,6 +79,16 @@ void TimeNodeModel::addPrevTimeRelation(Id<Scenario::ConstraintModel> cstrId)
             return;
     }
     m_prevConstraints.push_back(cstrId);
+}
+
+void TimeNodeModel::removeNextTimeRelation(Id<Scenario::ConstraintModel> id)
+{
+    m_nextConstraints.remove(id);
+}
+
+void TimeNodeModel::removePrevTimeRelation(Id<Scenario::ConstraintModel> id)
+{
+   m_prevConstraints.remove(id);
 }
 
 void TimeNodeModel::onDateChanged(const TimeValue& date)

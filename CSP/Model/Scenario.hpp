@@ -21,6 +21,7 @@ class BaseScenario;
 
 namespace CSP
 {
+class Branch;
 class TimeNodeModel;
 class TimeRelationModel;
 class ScenarioModel : public QObject, public Nano::Observer
@@ -47,7 +48,6 @@ public:
     void on_eventRemoved(const Scenario::EventModel&);
     void on_timeNodeRemoved(const Scenario::TimeNodeModel&);
 
-
     const TimeNodeModel& getInsertTimenode(
             Scenario::ScenarioInterface& scenario,
             const Id<Scenario::TimeNodeModel>& timeNodeId);
@@ -66,6 +66,7 @@ public:
 
     QHash<Id<Scenario::TimeNodeModel>,TimeNodeModel*> m_timeNodes;
     QHash<Id<Scenario::ConstraintModel>,TimeRelationModel*> m_timeRelations;
+    std::vector<Branch*> m_branches;
 
 private:
 
