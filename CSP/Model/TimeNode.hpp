@@ -35,6 +35,9 @@ public:
     kiwi::Variable& getDate();
     const TimeValue* getIscoreDate();
 
+    kiwi::Variable& getDateMin();
+    kiwi::Variable& getDateMax();
+
     /**
      * @brief dateChanged
      * call this function to check if csp date differ from iscore date
@@ -45,6 +48,9 @@ public:
 private:
     kiwi::Variable m_date{"date"};
     const TimeValue* m_iscoreDate;
+
+    kiwi::Variable m_date_min{"dmin"};
+    kiwi::Variable m_date_max{"dmax"};
 
     void onDateChanged(const TimeValue& date);
 };

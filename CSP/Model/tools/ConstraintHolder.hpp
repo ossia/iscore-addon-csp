@@ -63,4 +63,14 @@ protected:
 
     kiwi::Solver& m_solver;
 };
+
+namespace Strength
+{
+    const double Required = 1000000; // kiwi::strength::required; // = 1 001 001 000
+
+    const double Weak = 1.0;
+    const double Medium = 1000.0;
+    const double Strong = Medium * 1000.0;
+    const double VeryStrong = Strong * 1000.0;
+}
 }

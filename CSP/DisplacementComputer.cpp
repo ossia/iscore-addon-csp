@@ -35,7 +35,7 @@ void compute(
 	    }
 
 	    //weight
-	    solver.addEditVariable(curDraggedCspTimeNode->getDate(),  kiwi::strength::strong + 1.0);
+        solver.addEditVariable(curDraggedCspTimeNode->getDate(),  Strength::Required-1);
 
 	    // suggest their new values
 	    auto newDate = initialDate.msec() + deltaTime.msec();
@@ -199,8 +199,8 @@ void updateConstraints(Scenario::ScenarioModel& scenario,
 
             try {
                 // add var
-                solver.addEditVariable(ossia_startTn->getDate(),  kiwi::strength::medium);
-                solver.addEditVariable(ossia_endTn->getDate(),  kiwi::strength::medium);
+                solver.addEditVariable(ossia_startTn->getDate(), Strength::Medium);
+                solver.addEditVariable(ossia_endTn->getDate(),  Strength::Medium);
 
                 // maximum extend
                 solver.suggestValue(ossia_startTn->getDate(), maxDate);

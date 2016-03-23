@@ -14,7 +14,7 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
     public:
         ExecutionPolicy() = default;
 
-        ExecutionPolicy(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements);
+        ExecutionPolicy(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements);
 
         void
         computeDisplacement(

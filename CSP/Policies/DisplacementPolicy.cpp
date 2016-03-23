@@ -53,9 +53,9 @@ void DisplacementPolicy::refreshStays(
         curTimeRelation->removeStays();
 
         //ad new stays
-        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min == initialMin.msec(), kiwi::strength::required));
+        curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min == initialMin.msec(), Strength::Required));
         if(!initialMax.isInfinite())
-            curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == initialMax.msec(), kiwi::strength::required));
+            curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == initialMax.msec(), Strength::Required));
     }
 
     //time node stays
@@ -75,7 +75,7 @@ void DisplacementPolicy::refreshStays(
         curCspTimeNode->removeStays();
 
         // - add new stays
-        curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), kiwi::strength::medium));
+        curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), Strength::Weak));
     }
 }
 }

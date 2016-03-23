@@ -27,13 +27,16 @@ TimeNodeModel::TimeNodeModel(
     if(timeNodeId.val() != 0)
     {
         auto constraintName = new kiwi::Constraint({m_date >= cspScenario.getStartTimeNode()->getDate()});\
-        putConstraintInSolver(constraintName);
+        addStay(constraintName);
     }
     else// if it is indeed start node, constrain him the the start value
     {
         auto constraintName = new kiwi::Constraint({m_date == m_date.value()});\
-        putConstraintInSolver(constraintName);
+        addStay(constraintName);
     }
+//    m_date_min.setValue(0.0);
+//    m_date_max.setValue(m_date.value());
+    putConstraintInSolver(new kiwi::Constraint{m_date_min <= m_date_max});
 
     // watch over date edits
     con(timeNodeModel, &Scenario::TimeNodeModel::dateChanged, this, &TimeNodeModel::onDateChanged);
@@ -47,6 +50,16 @@ kiwi::Variable& TimeNodeModel::getDate()
 const TimeValue*TimeNodeModel::getIscoreDate()
 {
     return m_iscoreDate;
+}
+
+kiwi::Variable&TimeNodeModel::getDateMin()
+{
+    return m_date_min;
+}
+
+kiwi::Variable&TimeNodeModel::getDateMax()
+{
+    return m_date_max;
 }
 
 bool TimeNodeModel::dateChanged() const

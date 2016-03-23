@@ -59,11 +59,11 @@ void FlexDisplacementPolicy::refreshStays(
 
         // ensure than [min - max] interval stays the same
         curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_max == curTimeRelation->m_min + distanceFromMinToMax,
-                                                     kiwi::strength::required));
+                                                     Strength::Required));
 
         // Try to keep min, stronger than keeping timeNode date
         curTimeRelation->addStay(new kiwi::Constraint(curTimeRelation->m_min  == initialMin,
-                                                      kiwi::strength::medium));
+                                                      Strength::Medium));
     }
 
     //time node stays
@@ -83,7 +83,7 @@ void FlexDisplacementPolicy::refreshStays(
         curCspTimeNode->removeStays();
 
         // - add new stays
-        curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), kiwi::strength::weak));
+        curCspTimeNode->addStay(new kiwi::Constraint(curCspTimeNode->m_date == initialDate.msec(), Strength::Weak));
     }
 }
 }

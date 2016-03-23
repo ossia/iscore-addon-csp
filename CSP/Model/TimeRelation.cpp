@@ -47,6 +47,7 @@ TimeRelationModel::TimeRelationModel(
     auto nextCSPTimenode = cspScenario.insertTimenode(nextTimenodeModel.id());
 
     // apply model constraints
+
     // 1 - min >= 0
     auto cMinGreaterThanZero = new kiwi::Constraint({m_min >= 0});\
     putConstraintInSolver(cMinGreaterThanZero);
@@ -55,12 +56,19 @@ TimeRelationModel::TimeRelationModel(
     auto cMinLowerThanMax = new kiwi::Constraint({m_min <= m_max});\
     putConstraintInSolver(cMinLowerThanMax);
 
-    // 3 - date of end timenode inside min and max
+/*    // 3 - date of end timenode inside min and max
     auto cNextDateMin = new kiwi::Constraint({nextCSPTimenode->getDate() >= (prevCSPTimenode->getDate() + m_min)});\
     putConstraintInSolver(cNextDateMin);
 
     auto cNextDateMax = new kiwi::Constraint({nextCSPTimenode->getDate() <= (prevCSPTimenode->getDate() + m_max)});\
     putConstraintInSolver(cNextDateMax);
+*/
+
+    putConstraintInSolver(new kiwi::Constraint{nextCSPTimenode->getDateMin() >= prevCSPTimenode->getDateMin() + this->m_min });
+    putConstraintInSolver(new kiwi::Constraint{nextCSPTimenode->getDateMax() <= prevCSPTimenode->getDateMax() + this->m_max });
+
+    putConstraintInSolver(new kiwi::Constraint{prevCSPTimenode->getDateMin() >= nextCSPTimenode->getDateMin() - this->m_max });
+    putConstraintInSolver(new kiwi::Constraint{prevCSPTimenode->getDateMax() <= nextCSPTimenode->getDateMax() - this->m_min });
 
 
     // if there are sub scenarios, store them
