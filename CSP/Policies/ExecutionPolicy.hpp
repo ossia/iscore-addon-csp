@@ -22,7 +22,7 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
 
     private:
         bool updateTnInit();
-        void cstrUpdatedInit();
+        void fixConstraints();
         void updateBranchInit();
 
         void tnUpdated();
@@ -38,23 +38,12 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
         Scenario::ElementsProperties& m_elementsProperties;
 
         QSet<Id<Scenario::TimeNodeModel>> m_tnToUpdate; // for this step
+        Id<Scenario::TimeNodeModel> m_tnToFix{}; // at init
+
         QSet<Id<Scenario::TimeNodeModel>> m_tnNextStep; // can be computed as soon as possible
         QSet<Id<Scenario::TimeNodeModel>> m_waitingTn; // are waiting for some previous constraints
         QSet<Id<Scenario::ConstraintModel>> m_cstrToUpdateBack;
 
-        QVector<QVector<Id<Scenario::ConstraintModel>>> m_branches;
-        QSet<Id<Scenario::TimeNodeModel>> m_realNodes;
-
-        QMap<
-            QPair<
-                Scenario::Branch*,
-                Scenario::Branch*
-            >,
-            QPair<
-                Id<Scenario::TimeNodeModel>,
-                Id<Scenario::TimeNodeModel>
-            >
-        > m_commonAncestor; // two branches between two timenodes
 
 };
 

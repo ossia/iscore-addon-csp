@@ -3,6 +3,7 @@
 #include <CSP/Model/Scenario.hpp>
 #include <CSP/Model/TimeNode.hpp>
 #include <CSP/Model/TimeRelation.hpp>
+#include <CSP/Model/Branch.hpp>
 
 #include <CSP/DisplacementComputer.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
@@ -39,26 +40,17 @@ ExecutionPolicy::ExecutionPolicy(Scenario::ScenarioModel& scenario, Scenario::El
 
 
     m_elementsProperties.timenodes[m_scenario.startTimeNode().id()].newAbsoluteMax = 0;
-    m_elementsProperties.timenodes[m_scenario.startTimeNode().id()].previousBranches.push_back({});
-    m_elementsProperties.timenodes[m_scenario.startTimeNode().id()].previousBranches.back().timenodes
-            .push_back(m_scenario.startTimeNode().id());
 
     m_tnToUpdate.insert(m_scenario.startTimeNode().id());
-    bool goAhead = true;
+    m_cstrToUpdateBack.clear();
 
     qDebug() << " ***** start init ***** ";
-    while(!m_tnToUpdate.empty() && goAhead)
+    while(!m_tnToUpdate.empty())
     {
-        goAhead = updateTnInit();
-        if(!goAhead)
+        updateTnInit();
+        for(auto c : m_cspScenario->m_timeRelations)
         {
-            cstrUpdatedInit();
-            m_cstrToUpdateBack.clear();
-            m_tnToUpdate.clear();
-            for(auto cProp : m_elementsProperties.constraints)
-                cProp.token.disable();
-
-            m_tnToUpdate.insert(m_scenario.startTimeNode().id());
+            m_elementsProperties.constraints.take(c->id()).token.disable();
         }
     }
 
@@ -117,120 +109,104 @@ void ExecutionPolicy::computeDisplacement(const Id<Scenario::TimeNodeModel>& pos
 
 bool ExecutionPolicy::updateTnInit()
 {
-    TimeNodeModel* timenode = m_cspScenario->m_timeNodes[*m_tnToUpdate.begin()];
-    auto& startId = timenode->id();
-    auto& tnProperties = m_elementsProperties.timenodes[startId];
-
-    m_tnToUpdate.erase(m_tnToUpdate.begin());
-
-    bool allTokens = true;
-    for(auto cstrId : timenode->prevConstraints())
+    bool coherency = true;
+    while(coherency)
     {
-        if(!m_elementsProperties.constraints[cstrId].hasToken())
+        coherency = true;
+        TimeNodeModel* timenode = m_cspScenario->m_timeNodes[*m_tnToUpdate.begin()];
+        auto& startId = timenode->id();
+        auto& tnProperties = m_elementsProperties.timenodes[startId];
+
+        m_tnToUpdate.erase(m_tnToUpdate.begin());
+
+        bool allTokens = true;
+        for(auto cstrId : timenode->prevConstraints())
         {
-            allTokens = false;
-            break;
-        }
-    }
-
-    if(allTokens)
-    {
-        // update Tn
-        for(auto cId : timenode->prevConstraints())
-        {
-            TimeRelationModel* c = m_cspScenario->m_timeRelations[cId];
-            auto& cstrProp = m_elementsProperties.constraints[cId];
-
-            if(tnProperties.newAbsoluteMin < cstrProp.min
-                    + m_elementsProperties.timenodes[c->startTn()].newAbsoluteMin)
+            if(!m_elementsProperties.constraints[cstrId].hasToken())
             {
-                tnProperties.newAbsoluteMin = cstrProp.min
-                                                        + m_elementsProperties.timenodes[c->startTn()].newAbsoluteMin;
-            }
-
-            tnProperties.previousBranches.clear();
-            for(auto& b : m_elementsProperties.constraints[cId].previousBranches)
-            {
-                    tnProperties.previousBranches.push_back(b);
-                    tnProperties.previousBranches.back().timenodes.push_back(startId);
+                allTokens = false;
+                break;
             }
         }
-        bool coherency = true;
-        for(auto cId : timenode->prevConstraints())
+
+        if(allTokens)
         {
-            TimeRelationModel* c = m_cspScenario->m_timeRelations[cId];
-            auto& cstrProp = m_elementsProperties.constraints[cId];
-
-            cstrProp.token.deltaMin = tnProperties.newAbsoluteMin - (cstrProp.min + m_elementsProperties.timenodes[c->startTn()].newAbsoluteMin);
-
-            if(cstrProp.token.deltaMin > 1)
+            // update Tn
+            for(auto cId : timenode->prevConstraints())
             {
-                coherency = false;
-            }
-        }
-        if(!coherency)
-        {
-            for(auto c : timenode->prevConstraints())
-                m_cstrToUpdateBack.insert(c);
+                TimeRelationModel* c = m_cspScenario->m_timeRelations[cId];
+                auto& cstrProp = m_elementsProperties.constraints[cId];
 
-            return false;
-        }
-
-        // Go ahead
-        for(auto cId : timenode->nextConstraints())
-        {
-            m_elementsProperties.constraints[cId].token.state = Scenario::TokenState::Forward;
-            m_branches.push_back({cId});
-
-            TimeRelationModel* c = m_cspScenario->m_timeRelations[cId];
-            timenode = m_cspScenario->m_timeNodes[c->endTn()];
-
-            if(m_elementsProperties.constraints[cId].previousBranches.empty())
-            {
-                m_elementsProperties.constraints[cId].previousBranches = tnProperties.previousBranches;
-                for(auto& b : m_elementsProperties.constraints[cId].previousBranches )
+                if(tnProperties.newAbsoluteMin < cstrProp.min
+                        + m_elementsProperties.timenodes[c->startTn()].newAbsoluteMin)
                 {
-                    b.constraints.push_back(cId);
+                    tnProperties.newAbsoluteMin = cstrProp.min
+                                                            + m_elementsProperties.timenodes[c->startTn()].newAbsoluteMin;
                 }
             }
-
-            // fastforward
-            while(timenode->prevConstraints().size() == 1 && timenode->nextConstraints().size() == 1)
+            for(auto cId : timenode->prevConstraints())
             {
-                auto& tnProp = m_elementsProperties.timenodes[timenode->id()];
-                auto prevCId = *timenode->prevConstraints().begin();
+                TimeRelationModel* c = m_cspScenario->m_timeRelations[cId];
+                auto& cstrProp = m_elementsProperties.constraints[cId];
 
-                c = m_cspScenario->m_timeRelations[prevCId];
-                tnProp.newAbsoluteMin = m_elementsProperties.constraints[prevCId].min
-                                                        + m_elementsProperties.timenodes[c->startTn()].newAbsoluteMin;
-                m_elementsProperties.constraints[prevCId].token.disable();
+                cstrProp.token.deltaMin = tnProperties.newAbsoluteMin - (cstrProp.min + m_elementsProperties.timenodes[c->startTn()].newAbsoluteMin);
 
-                auto nextCId = *timenode->nextConstraints().begin();
-                m_branches.back().push_back(nextCId);
-                m_elementsProperties.constraints[nextCId].token.state = Scenario::TokenState::Forward;
+                if(cstrProp.token.deltaMin > 1)
+                {
+                    coherency = false;
+                    m_tnToFix = timenode->id();
+                }
+            }
+            if(!coherency)
+                break;
 
-                if(tnProp.previousBranches.empty())
-                    for(auto& b : m_elementsProperties.constraints[prevCId].previousBranches)
+            // Go ahead
+            for(auto cId : timenode->nextConstraints())
+            {
+                m_elementsProperties.constraints[cId].token.state = Scenario::TokenState::Forward;
+                TimeRelationModel* c = m_cspScenario->m_timeRelations[cId];
+                auto nextTn =  m_cspScenario->m_timeNodes.take(c->endTn());
+
+                if(c->m_branches.empty())
+                    for(auto b : timenode->m_branches)
                     {
-                        tnProp.previousBranches.push_back(b);
-                        tnProp.previousBranches.back().constraints.push_back(nextCId);
-                        tnProp.previousBranches.back().timenodes.push_back(timenode->id());
+                        auto nextB = new Branch{b};
+                        nextB->addTimeRelation(cId);
+                        nextB->addTimenode(c->endTn());
+                        c->m_branches.push_back(nextB);
+                        nextTn->m_branches.push_back(nextB);
                     }
 
-                timenode = m_cspScenario->m_timeNodes[m_cspScenario->m_timeRelations[nextCId]->endTn()];
-            }
+                timenode = nextTn;
 
-            if(!m_tnToUpdate.contains(timenode->id()))
+                /* optimisation
+                 *
+                    // fastforward
+                    while(timenode->prevConstraints().size() == 1 && timenode->nextConstraints().size() == 1)
+                    {
+                        auto& tnProp = m_elementsProperties.timenodes[timenode->id()];
+                        auto prevCId = *timenode->prevConstraints().begin();
+
+                        c = m_cspScenario->m_timeRelations[prevCId];
+                        tnProp.newAbsoluteMin = m_elementsProperties.constraints[prevCId].min
+                                                                + m_elementsProperties.timenodes[c->startTn()].newAbsoluteMin;
+                        m_elementsProperties.constraints[prevCId].token.disable();
+
+                        auto nextCId = *timenode->nextConstraints().begin();
+
+                        m_elementsProperties.constraints[nextCId].token.state = Scenario::TokenState::Forward;
+
+                        timenode = m_cspScenario->m_timeNodes[m_cspScenario->m_timeRelations[nextCId]->endTn()];
+                    }
+                */
                 m_tnToUpdate.insert(timenode->id());
-
-            if(!m_realNodes.contains(timenode->id()))
-                m_realNodes.insert(timenode->id());
+            }
         }
     }
     return true;
 }
 
-void ExecutionPolicy::cstrUpdatedInit()
+void ExecutionPolicy::fixConstraints()
 {
 
 }
