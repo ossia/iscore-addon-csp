@@ -24,10 +24,10 @@ class MoveEventCSPFlexFactory : public Scenario::Command::MoveEventFactoryInterf
         // in the asked context (="strategy")
         int priority(const iscore::ApplicationContext& ctx,  MoveEventFactoryInterface::Strategy s) const override
         {
-            auto mode = ctx.settings<CSP::Settings::Model>().getMode();
+            auto mode = ctx.settings<CSP::Settings::Model>().getEditionMode();
 
             if(s == MoveEventFactoryInterface::Strategy::MOVE
-                && mode == CSP::Settings::Mode::Mode1)
+                && mode == CSP::Settings::EditionMode::Mode1)
             {
                 return 10;
             }

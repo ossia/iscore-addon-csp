@@ -1,8 +1,10 @@
 #include "View.hpp"
 #include <QComboBox>
 #include <QFormLayout>
+#include <QCheckBox>
 
-Q_DECLARE_METATYPE(CSP::Settings::Mode)
+Q_DECLARE_METATYPE(CSP::Settings::EditionMode)
+Q_DECLARE_METATYPE(CSP::Settings::ExecutionMode)
 
 namespace CSP
 {
@@ -15,30 +17,54 @@ View::View():
     auto lay = new QFormLayout;
     m_widg->setLayout(lay);
 
-    m_cb = new QComboBox;
-    m_cb->addItem(tr("Mode 1"), QVariant::fromValue(Mode::Mode1));
-    m_cb->addItem(tr("Mode 2"), QVariant::fromValue(Mode::Mode2));
-    m_cb->addItem(tr("Disabled"), QVariant::fromValue(Mode::Disabled));
-    lay->addRow(tr("Mode"), m_cb);
+    m_editionModeCB = new QComboBox;
+    m_editionModeCB->addItem(tr("Mode 1"), QVariant::fromValue(EditionMode::Mode1));
+    m_editionModeCB->addItem(tr("Mode 2"), QVariant::fromValue(EditionMode::Mode2));
+    m_editionModeCB->addItem(tr("Disabled"), QVariant::fromValue(EditionMode::Disabled));
+    lay->addRow(tr("Edition Mode"), m_editionModeCB);
 
-    connect(m_cb, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+    connect(m_editionModeCB, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             this, [&] (int idx) {
-        emit modeChanged(m_cb->itemData(idx).value<Mode>());
+        emit editionModeChanged(m_editionModeCB->itemData(idx).value<EditionMode>());
+    });
+
+    m_execModeCB = new QCheckBox;
+    lay->addRow(tr("Active on execution"), m_execModeCB);
+    connect(m_execModeCB, &QCheckBox::toggled,
+            this, [&] (bool b)
+    {
+        ExecutionMode newMode = b ? ExecutionMode::Active : ExecutionMode::Inactive;
+        emit executionModeChanged(newMode);
     });
 }
 
-void View::setMode(Mode val)
+void View::setEditionMode(EditionMode val)
 {
     switch(val)
     {
-        case Mode::Mode1:
-            m_cb->setCurrentIndex(0);
+        case EditionMode::Mode1:
+            m_editionModeCB->setCurrentIndex(0);
             break;
-        case Mode::Mode2:
-            m_cb->setCurrentIndex(1);
+        case EditionMode::Mode2:
+            m_editionModeCB->setCurrentIndex(1);
             break;
-        case Mode::Disabled:
-            m_cb->setCurrentIndex(2);
+        case EditionMode::Disabled:
+            m_editionModeCB->setCurrentIndex(2);
+            break;
+        default:
+            return;
+    }
+}
+
+void View::setExecutionMode(ExecutionMode val)
+{
+    switch(val)
+    {
+        case ExecutionMode::Active:
+            m_execModeCB->setChecked(true);
+            break;
+        case ExecutionMode::Inactive:
+            m_execModeCB->setChecked(false);
             break;
         default:
             return;

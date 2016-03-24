@@ -1,13 +1,18 @@
 #include "ExecutionPolicyFactory.hpp"
 
 #include <CSP/Policies/ExecutionPolicy.hpp>
+#include <CSP/Settings/Model.hpp>
 
 namespace CSP {
 
-Scenario::CSPCoherencyCheckerInterface*ExecutionPolicyFactory::make(Scenario::ScenarioModel& scenario,
-                                                          const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements)
+Scenario::CSPCoherencyCheckerInterface* ExecutionPolicyFactory::make(Scenario::ScenarioModel& scenario,
+                                                                    const iscore::ApplicationContext& ctx,
+                                                          Scenario::ElementsProperties& elementsProperties)
 {
-    return new CSP::ExecutionPolicy{scenario, positionnedElements};
+    if(ctx.settings<CSP::Settings::Model>().getExecutionMode() == Settings::ExecutionMode::Active)
+        return new CSP::ExecutionPolicy{scenario, elementsProperties};
+
+    return nullptr;
 }
 
 }

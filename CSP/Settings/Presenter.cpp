@@ -17,16 +17,27 @@ Presenter::Presenter(
         QObject *parent):
     iscore::SettingsDelegatePresenterInterface{m, v, parent}
 {
-    con(v, &View::modeChanged,
+    con(v, &View::editionModeChanged,
         this, [&] (auto val) {
-        if(val != m.getMode())
+        if(val != m.getEditionMode())
         {
-            m_disp.submitCommand<SetMode>(this->model(this), val);
+            m_disp.submitCommand<SetEditionMode>(this->model(this), val);
         }
     });
 
-    con(m, &Model::modeChanged, &v, &View::setMode);
-    v.setMode(m.getMode());
+    con(m, &Model::editionModeChanged, &v, &View::setEditionMode);
+    v.setEditionMode(m.getEditionMode());
+
+    con(v, &View::executionModeChanged,
+        this, [&] (auto val) {
+        if(val != m.getExecutionMode())
+        {
+            m_disp.submitCommand<SetExecutionMode>(this->model(this), val);
+        }
+    });
+
+    con(m, &Model::executionModeChanged, &v, &View::setExecutionMode);
+    v.setExecutionMode(m.getExecutionMode());
 }
 
 QString Presenter::settingsName()
