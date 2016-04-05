@@ -51,6 +51,7 @@ public:
      * @return
      */
     bool maxChanged() const;
+    void restoreConstraints() override;
 
 private:
     kiwi::Variable m_min{"min"};
@@ -58,6 +59,9 @@ private:
 
     kiwi::Variable m_max{"max"};
     TimeValue m_iscoreMax{};
+
+    Id<Scenario::TimeNodeModel> m_startId{};
+    Id<Scenario::TimeNodeModel> m_endId{};
 
     kiwi::Constraint m_cstrRigidity{kiwi::Constraint(m_min == m_max)};//TODO ??? old TODO ask JM if it is safe to do so
 

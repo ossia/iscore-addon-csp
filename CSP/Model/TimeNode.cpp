@@ -20,23 +20,9 @@ TimeNodeModel::TimeNodeModel(
     m_iscoreDate = &timeNodeModel.date();
 
     m_date.setValue(m_iscoreDate->msec());
-    // apply model constraints
+    m_id = timeNodeId;
 
-    // 1 - events cannot happen before the start node
-    // except for start timenode
-    if(timeNodeId.val() != 0)
-    {
-        auto constraintName = new kiwi::Constraint({m_date >= cspScenario.getStartTimeNode()->getDate()});\
-        addStay(constraintName);
-    }
-    else// if it is indeed start node, constrain him the the start value
-    {
-        auto constraintName = new kiwi::Constraint({m_date == m_date.value()});\
-        addStay(constraintName);
-    }
-//    m_date_min.setValue(0.0);
-//    m_date_max.setValue(m_date.value());
-    putConstraintInSolver(new kiwi::Constraint{m_date_min <= m_date_max});
+    restoreConstraints();
 
     // watch over date edits
     con(timeNodeModel, &Scenario::TimeNodeModel::dateChanged, this, &TimeNodeModel::onDateChanged);
@@ -65,6 +51,26 @@ kiwi::Variable&TimeNodeModel::getDateMax()
 bool TimeNodeModel::dateChanged() const
 {
     return m_date.value() != m_iscoreDate->msec();
+}
+
+void TimeNodeModel::restoreConstraints()
+{
+    removeAllConstraints();
+
+    // apply model constraints
+
+    if(m_id == Id<Scenario::TimeNodeModel>{0})
+    {
+        putConstraintInSolver(new kiwi::Constraint{m_date == 0});
+        putConstraintInSolver(new kiwi::Constraint{m_date_min == 0});
+        putConstraintInSolver(new kiwi::Constraint{m_date_max == 0});
+    }
+    else
+    {
+        putConstraintInSolver(new kiwi::Constraint{m_date >= 0});
+        putConstraintInSolver(new kiwi::Constraint{m_date_min >= 0});
+        putConstraintInSolver(new kiwi::Constraint{m_date_max >= m_date_min});
+    }
 }
 
 void TimeNodeModel::onDateChanged(const TimeValue& date)

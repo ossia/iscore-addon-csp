@@ -14,11 +14,10 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
     public:
         ExecutionPolicy() = default;
 
-        ExecutionPolicy(Scenario::ScenarioModel& scenario, const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements);
+        ExecutionPolicy(Scenario::ScenarioModel& scenario, Scenario::ElementsProperties& elementsProperties);
 
-        void
-        computeDisplacement(
-                const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements,
+        bool
+        computeDisplacement(const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements,
                 Scenario::ElementsProperties& elementsProperties) override;
 
     protected:
@@ -28,6 +27,7 @@ class ExecutionPolicy final : public Scenario::CSPCoherencyCheckerInterface
 
     private:
         Scenario::ScenarioModel& m_scenario;
+        Scenario::ElementsProperties& m_elementsProperties;
 };
 
 }

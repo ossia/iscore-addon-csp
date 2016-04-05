@@ -26,8 +26,11 @@ public:
     {
         for(auto constraint : m_constraints)
         {
-           m_solver.removeConstraint(*constraint);
-           delete constraint;
+            if(m_solver.hasConstraint(*constraint))
+            {
+               m_solver.removeConstraint(*constraint);
+               delete constraint;
+            }
         }
         m_constraints.clear();
         removeStays();
@@ -43,8 +46,11 @@ public:
     {
         for(auto stay : m_stays)
         {
-           m_solver.removeConstraint(*stay);
-           delete stay;
+           if(m_solver.hasConstraint(*stay))
+           {
+               m_solver.removeConstraint(*stay);
+               delete stay;
+           }
         }
 
         m_stays.clear();//important
@@ -55,6 +61,9 @@ public:
         m_solver.addConstraint(*cstr);
         m_constraints.push_back(cstr);
     }
+
+    virtual void restoreConstraints() = 0;
+
 
 
 protected:

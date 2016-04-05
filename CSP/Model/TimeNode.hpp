@@ -44,6 +44,7 @@ public:
      * @return
      */
     bool dateChanged() const;
+    void restoreConstraints() override;
 
 private:
     kiwi::Variable m_date{"date"};
@@ -51,6 +52,8 @@ private:
 
     kiwi::Variable m_date_min{"dmin"};
     kiwi::Variable m_date_max{"dmax"};
+
+    Id<Scenario::TimeNodeModel> m_id{};
 
     void onDateChanged(const TimeValue& date);
 };

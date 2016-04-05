@@ -35,6 +35,7 @@ TimeRelationModel::TimeRelationModel(
         m_max.setValue(m_iscoreMax.msec());
     }
 
+
     // weight
     //solver.addEditVariable(m_min, kiwi::strength::strong);
     //solver.addEditVariable(m_max, kiwi::strength::medium);
@@ -42,34 +43,13 @@ TimeRelationModel::TimeRelationModel(
     auto& prevTimenodeModel = startTimeNode(constraint, scenario);
     auto& nextTimenodeModel = endTimeNode(constraint, scenario);
 
-    //retrieve/create prev and next timenode
-    auto prevCSPTimenode = cspScenario.insertTimenode(prevTimenodeModel.id());
-    auto nextCSPTimenode = cspScenario.insertTimenode(nextTimenodeModel.id());
+    m_startId = prevTimenodeModel.id();
+    m_endId = nextTimenodeModel.id();
 
-    // apply model constraints
+    auto prevCSPTimenode = cspScenario.insertTimenode(m_startId);
+    auto nextCSPTimenode = cspScenario.insertTimenode(m_endId);
 
-    // 1 - min >= 0
-    auto cMinGreaterThanZero = new kiwi::Constraint({m_min >= 0});\
-    putConstraintInSolver(cMinGreaterThanZero);
-
-    // 2 - min inferior to max
-    auto cMinLowerThanMax = new kiwi::Constraint({m_min <= m_max});\
-    putConstraintInSolver(cMinLowerThanMax);
-
-/*    // 3 - date of end timenode inside min and max
-    auto cNextDateMin = new kiwi::Constraint({nextCSPTimenode->getDate() >= (prevCSPTimenode->getDate() + m_min)});\
-    putConstraintInSolver(cNextDateMin);
-
-    auto cNextDateMax = new kiwi::Constraint({nextCSPTimenode->getDate() <= (prevCSPTimenode->getDate() + m_max)});\
-    putConstraintInSolver(cNextDateMax);
-*/
-
-    putConstraintInSolver(new kiwi::Constraint{nextCSPTimenode->getDateMin() >= prevCSPTimenode->getDateMin() + this->m_min });
-    putConstraintInSolver(new kiwi::Constraint{nextCSPTimenode->getDateMax() <= prevCSPTimenode->getDateMax() + this->m_max });
-
-    putConstraintInSolver(new kiwi::Constraint{prevCSPTimenode->getDateMin() >= nextCSPTimenode->getDateMin() - this->m_max });
-    putConstraintInSolver(new kiwi::Constraint{prevCSPTimenode->getDateMax() <= nextCSPTimenode->getDateMax() - this->m_min });
-
+    restoreConstraints();
 
     // if there are sub scenarios, store them
     for(auto& process : constraint.processes)
@@ -123,6 +103,29 @@ bool TimeRelationModel::minChanged() const
 bool TimeRelationModel::maxChanged() const
 {
     return m_max.value() != m_iscoreMax.msec();
+}
+
+void TimeRelationModel::restoreConstraints()
+{
+    removeAllConstraints();
+
+    // apply model constraints
+
+    // 1 - min >= 0
+    auto cMinGreaterThanZero = new kiwi::Constraint({m_min >= 0});\
+    putConstraintInSolver(cMinGreaterThanZero);
+
+    // 2 - min inferior to max
+    auto cMinLowerThanMax = new kiwi::Constraint({m_min <= m_max});\
+    putConstraintInSolver(cMinLowerThanMax);
+
+/*    // 3 - date of end timenode inside min and max
+    auto cNextDateMin = new kiwi::Constraint({nextCSPTimenode->getDate() >= (prevCSPTimenode->getDate() + m_min)});\
+    putConstraintInSolver(cNextDateMin);
+
+    auto cNextDateMax = new kiwi::Constraint({nextCSPTimenode->getDate() <= (prevCSPTimenode->getDate() + m_max)});\
+    putConstraintInSolver(cNextDateMax);
+*/
 }
 
 void TimeRelationModel::onMinDurationChanged(const TimeValue& min)
