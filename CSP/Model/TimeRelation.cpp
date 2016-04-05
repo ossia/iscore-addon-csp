@@ -49,7 +49,23 @@ TimeRelationModel::TimeRelationModel(
     auto prevCSPTimenode = cspScenario.insertTimenode(m_startId);
     auto nextCSPTimenode = cspScenario.insertTimenode(m_endId);
 
-    restoreConstraints();
+    // apply model constraints
+
+    // 1 - min >= 0
+    auto cMinGreaterThanZero = new kiwi::Constraint({m_min >= 0});\
+    putConstraintInSolver(cMinGreaterThanZero);
+
+    // 2 - min inferior to max
+    auto cMinLowerThanMax = new kiwi::Constraint({m_min <= m_max});\
+    putConstraintInSolver(cMinLowerThanMax);
+
+    // 3 - date of end timenode inside min and max
+    auto cNextDateMin = new kiwi::Constraint({nextCSPTimenode->getDate() >= (prevCSPTimenode->getDate() + m_min)});\
+    putConstraintInSolver(cNextDateMin);
+
+    auto cNextDateMax = new kiwi::Constraint({nextCSPTimenode->getDate() <= (prevCSPTimenode->getDate() + m_max)});\
+    putConstraintInSolver(cNextDateMax);
+
 
     // if there are sub scenarios, store them
     for(auto& process : constraint.processes)
@@ -105,27 +121,15 @@ bool TimeRelationModel::maxChanged() const
     return m_max.value() != m_iscoreMax.msec();
 }
 
-void TimeRelationModel::restoreConstraints()
+void TimeRelationModel::resetConstraints()
 {
-    removeAllConstraints();
-
-    // apply model constraints
-
-    // 1 - min >= 0
-    auto cMinGreaterThanZero = new kiwi::Constraint({m_min >= 0});\
-    putConstraintInSolver(cMinGreaterThanZero);
-
-    // 2 - min inferior to max
-    auto cMinLowerThanMax = new kiwi::Constraint({m_min <= m_max});\
-    putConstraintInSolver(cMinLowerThanMax);
-
-/*    // 3 - date of end timenode inside min and max
-    auto cNextDateMin = new kiwi::Constraint({nextCSPTimenode->getDate() >= (prevCSPTimenode->getDate() + m_min)});\
-    putConstraintInSolver(cNextDateMin);
-
-    auto cNextDateMax = new kiwi::Constraint({nextCSPTimenode->getDate() <= (prevCSPTimenode->getDate() + m_max)});\
-    putConstraintInSolver(cNextDateMax);
-*/
+    for(auto constraint : m_constraints)
+    {
+        if(!m_solver.hasConstraint(*constraint))
+        {
+           m_solver.addConstraint(*constraint);
+        }
+    }
 }
 
 void TimeRelationModel::onMinDurationChanged(const TimeValue& min)

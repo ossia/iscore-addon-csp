@@ -62,7 +62,7 @@ public:
         m_constraints.push_back(cstr);
     }
 
-    virtual void restoreConstraints() = 0;
+    virtual void resetConstraints() = 0;
 
 
 

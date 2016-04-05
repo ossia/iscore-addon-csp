@@ -44,7 +44,7 @@ public:
      * @return
      */
     bool dateChanged() const;
-    void restoreConstraints() override;
+    void resetConstraints() override;
 
 private:
     kiwi::Variable m_date{"date"};

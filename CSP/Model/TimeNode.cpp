@@ -22,7 +22,18 @@ TimeNodeModel::TimeNodeModel(
     m_date.setValue(m_iscoreDate->msec());
     m_id = timeNodeId;
 
-    restoreConstraints();
+    if(m_id == Id<Scenario::TimeNodeModel>{0})
+    {
+        putConstraintInSolver(new kiwi::Constraint{m_date == 0});
+        putConstraintInSolver(new kiwi::Constraint{m_date_min == 0});
+        putConstraintInSolver(new kiwi::Constraint{m_date_max == 0});
+    }
+    else
+    {
+        putConstraintInSolver(new kiwi::Constraint{m_date >= 0});
+        putConstraintInSolver(new kiwi::Constraint{m_date_min >= 0});
+        putConstraintInSolver(new kiwi::Constraint{m_date_max >= m_date_min});
+    }
 
     // watch over date edits
     con(timeNodeModel, &Scenario::TimeNodeModel::dateChanged, this, &TimeNodeModel::onDateChanged);
@@ -53,23 +64,14 @@ bool TimeNodeModel::dateChanged() const
     return m_date.value() != m_iscoreDate->msec();
 }
 
-void TimeNodeModel::restoreConstraints()
+void TimeNodeModel::resetConstraints()
 {
-    removeAllConstraints();
-
-    // apply model constraints
-
-    if(m_id == Id<Scenario::TimeNodeModel>{0})
+    for(auto constraint : m_constraints)
     {
-        putConstraintInSolver(new kiwi::Constraint{m_date == 0});
-        putConstraintInSolver(new kiwi::Constraint{m_date_min == 0});
-        putConstraintInSolver(new kiwi::Constraint{m_date_max == 0});
-    }
-    else
-    {
-        putConstraintInSolver(new kiwi::Constraint{m_date >= 0});
-        putConstraintInSolver(new kiwi::Constraint{m_date_min >= 0});
-        putConstraintInSolver(new kiwi::Constraint{m_date_max >= m_date_min});
+        if(!m_solver.hasConstraint(*constraint))
+        {
+           m_solver.addConstraint(*constraint);
+        }
     }
 }
 
