@@ -19,7 +19,7 @@ ExecutionPolicy::ExecutionPolicy(
 {
     ScenarioModel* cspScenario = m_scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly);
     auto& solver = cspScenario->getSolver();
-//    solver.reset(); // Reset all
+    solver.reset(); // Reset all
 
     for(auto& cstr : m_scenario.constraints)
     {
@@ -30,7 +30,7 @@ ExecutionPolicy::ExecutionPolicy(
         cstrProp.newMin = cstr.duration.minDuration();
         cstrProp.newMax = cstr.duration.maxDuration();
 
-        // - remove old stays
+        // - restore constraints
         curTimeRelation->resetConstraints();
 
         auto& prevTimenodeModel = startTimeNode(cstr, m_scenario);
@@ -65,16 +65,16 @@ bool ExecutionPolicy::computeDisplacement(const QVector<Id<Scenario::TimeNodeMod
             if(!positionnedElements.empty())
             {
                 auto& lastTnId = positionnedElements.back();
-                auto tn = cspScenario->m_timeNodes.value(lastTnId);
                 qDebug() << "fix " << lastTnId;
             }
             auto& solver = cspScenario->getSolver();
-//            solver.reset();
+            solver.reset();
 
             /* ****************************
              * FIRST WAVE : take cstr as user said, fix tn
              * ****************************/
 
+            qDebug() << "ouaich";
             QHashIterator<Id<Scenario::ConstraintModel>, TimeRelationModel*> timeRelationIterator(cspScenario->m_timeRelations);
             while(timeRelationIterator.hasNext())
             {
@@ -96,16 +96,17 @@ bool ExecutionPolicy::computeDisplacement(const QVector<Id<Scenario::TimeNodeMod
                 // Add edit variables
                 if(solver.hasEditVariable(curTimeRelation->m_min)) // we have to check, else kiwi crash half the time
                     solver.removeEditVariable(curTimeRelation->m_min);
-                solver.addEditVariable(curTimeRelation->m_min, Strength::Strong);
+                solver.addEditVariable(curTimeRelation->m_min, Strength::Required);
 
                 if(solver.hasEditVariable(curTimeRelation->m_max))
                     solver.removeEditVariable(curTimeRelation->m_max);
-                solver.addEditVariable(curTimeRelation->m_max, Strength::Strong);
+                solver.addEditVariable(curTimeRelation->m_max, Strength::Required);
 
                 // Suggest new values
                 solver.suggestValue(curTimeRelation->m_min, cstrProp.newMin.msec()); // if happened, cstrProp is up to date and min=max=real
                 solver.suggestValue(curTimeRelation->m_max, cstrProp.newMax.msec());
             }
+            qDebug() << "blablabla";
             auto dateMax = m_scenario.duration().msec();
             QHashIterator<Id<Scenario::TimeNodeModel>, TimeNodeModel*> timeNodeIterator(cspScenario->m_timeNodes);
             while (timeNodeIterator.hasNext())
@@ -245,44 +246,14 @@ bool ExecutionPolicy::computeDisplacement(const QVector<Id<Scenario::TimeNodeMod
                 cstrProp.newMax.setMSecs(max);
                 qDebug() << "cstr " << cstrId << cstrProp.newMin.msec() << cstrProp.newMax.msec();
             }
-
-            // -----------------
-            // Second Computation
-//
-/*
-//            solver.updateVariables();
-
-            timeNodeIterator.toFront();
-            while (timeNodeIterator.hasNext())
-            {
-                timeNodeIterator.next();
-                auto& curCspTimeNode = timeNodeIterator.value();
-
-                solver.removeEditVariable(curCspTimeNode->getDateMin());
-                solver.removeEditVariable(curCspTimeNode->getDateMax());
-            }
-//*/
-/*
-            timeRelationIterator.toFront();
-            while(timeRelationIterator.hasNext())
-            {
-                timeRelationIterator.next();
-
-                auto& relationId = timeRelationIterator.key();
-                auto& curTimeRelation = timeRelationIterator.value();
-                auto& cstrProp = m_elementsProperties.constraints[relationId];
-
-                cstrProp.newMin.setMSecs(curTimeRelation->m_min.value());
-                cstrProp.newMax.setMSecs(curTimeRelation->m_max.value());
-
-                qDebug() << "cstr " << relationId << cstrProp.newMin.msec() << cstrProp.newMax.msec();
-            }
-*/
         }
     }
     catch(kiwi::InternalSolverError e)
     {
         qDebug() << "kiwi error : " << e.what();
+        ScenarioModel* cspScenario = m_scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly);
+        auto& solver = cspScenario->getSolver();
+        solver.reset();
     }
     return true;
 }
