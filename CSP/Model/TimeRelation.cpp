@@ -121,7 +121,7 @@ bool TimeRelationModel::maxChanged() const
     return m_max.value() != m_iscoreMax.msec();
 }
 
-void TimeRelationModel::resetConstraints()
+void TimeRelationModel::restoreConstraints()
 {
     for(auto constraint : m_constraints)
     {

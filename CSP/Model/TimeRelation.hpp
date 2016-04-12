@@ -51,7 +51,7 @@ public:
      * @return
      */
     bool maxChanged() const;
-    void resetConstraints() override;
+    void restoreConstraints() override;
 
 private:
     kiwi::Variable m_min{"min"};

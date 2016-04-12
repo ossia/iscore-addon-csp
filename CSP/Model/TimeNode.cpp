@@ -64,7 +64,7 @@ bool TimeNodeModel::dateChanged() const
     return m_date.value() != m_iscoreDate->msec();
 }
 
-void TimeNodeModel::resetConstraints()
+void TimeNodeModel::restoreConstraints()
 {
     for(auto constraint : m_constraints)
     {
