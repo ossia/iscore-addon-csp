@@ -21,7 +21,7 @@ View::View():
     m_cb->addItem(tr("Disabled"), QVariant::fromValue(Mode::Disabled));
     lay->addRow(tr("Mode"), m_cb);
 
-    connect(m_cb, SignalUtils::QComboBox_currentIndexChanged_int,
+    connect(m_cb, SignalUtils::QComboBox_currentIndexChanged_int(),
             this, [&] (int idx) {
         emit modeChanged(m_cb->itemData(idx).value<Mode>());
     });
