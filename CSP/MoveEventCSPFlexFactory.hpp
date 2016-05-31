@@ -13,8 +13,8 @@ class MoveEventCSPFlexFactory : public Scenario::Command::MoveEventFactoryInterf
     public:
         Scenario::Command::SerializableMoveEvent* make(
                 Path<Scenario::ScenarioModel> &&scenarioPath,
-                const Id<Scenario::EventModel> &eventId,
-                const TimeValue &newDate,
+                Id<Scenario::EventModel> eventId,
+                TimeValue newDate,
                 ExpandMode mode) override;
 
         Scenario::Command::SerializableMoveEvent* make() override;

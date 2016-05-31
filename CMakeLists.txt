@@ -1,4 +1,3 @@
-#return()
 cmake_minimum_required(VERSION 3.1)
 project(iscore_addon_csp LANGUAGES CXX)
 

@@ -7,7 +7,7 @@ namespace CSP
 class ApplicationPlugin final : public iscore::GUIApplicationContextPlugin
 {
     public:
-        ApplicationPlugin(const iscore::ApplicationContext& pres);
+        ApplicationPlugin(const iscore::GUIApplicationContext& pres);
         ~ApplicationPlugin() = default;
 
     private:

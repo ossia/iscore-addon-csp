@@ -21,11 +21,11 @@ Presenter::Presenter(
         this, [&] (auto val) {
         if(val != m.getMode())
         {
-            m_disp.submitCommand<SetMode>(this->model(this), val);
+            m_disp.submitCommand<SetModelMode>(this->model(this), val);
         }
     });
 
-    con(m, &Model::modeChanged, &v, &View::setMode);
+    con(m, &Model::ModeChanged, &v, &View::setMode);
     v.setMode(m.getMode());
 }
 

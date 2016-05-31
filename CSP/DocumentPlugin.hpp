@@ -16,7 +16,7 @@ class DocumentPlugin : public iscore::DocumentPlugin
 {
         Q_OBJECT
     public:
-        DocumentPlugin(iscore::Document& doc, QObject* parent);
+        DocumentPlugin(const iscore::DocumentContext& doc, QObject* parent);
 
         void reload(iscore::DocumentModel& doc);
 

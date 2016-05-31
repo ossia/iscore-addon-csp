@@ -66,21 +66,23 @@ ExecutionPolicy::ExecutionPolicy(
     }
 }
 
-void ExecutionPolicy::computeDisplacement(const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements,
+bool ExecutionPolicy::computeDisplacement(const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements,
                                           Scenario::ElementsProperties& elementsProperties)
 {
     try{
-    if(ScenarioModel* cspScenario = m_scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
-    {
-        refreshStays(*cspScenario, elementsProperties, positionnedElements);
-    }
+        if(ScenarioModel* cspScenario = m_scenario.findChild<ScenarioModel*>("CSPScenario", Qt::FindDirectChildrenOnly))
+        {
+            refreshStays(*cspScenario, elementsProperties, positionnedElements);
+        }
 
-    updateConstraints(m_scenario, positionnedElements, elementsProperties);
+        updateConstraints(m_scenario, positionnedElements, elementsProperties);
 
+        return true;
     }
     catch(...)
     {
         qDebug() << "failed here";
+        return false;
     }
 }
 

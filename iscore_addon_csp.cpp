@@ -11,13 +11,10 @@ iscore_addon_csp::iscore_addon_csp() :
 {
 }
 
-iscore_addon_csp::~iscore_addon_csp()
-{
-
-}
+iscore_addon_csp::~iscore_addon_csp() = default;
 
 iscore::GUIApplicationContextPlugin* iscore_addon_csp::make_applicationPlugin(
-        const iscore::ApplicationContext& app)
+        const iscore::GUIApplicationContext& app)
 {
     return new CSP::ApplicationPlugin{app};
 }

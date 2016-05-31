@@ -7,10 +7,10 @@
 
 namespace CSP
 {
-DocumentPlugin::DocumentPlugin(iscore::Document& doc, QObject* parent):
+DocumentPlugin::DocumentPlugin(const iscore::DocumentContext& doc, QObject* parent):
     iscore::DocumentPlugin{doc, "CSPDocumentPlugin", parent}
 {
-    reload(doc.model());
+    reload(doc.document.model());
 }
 
 void DocumentPlugin::reload(iscore::DocumentModel& document)

@@ -4,10 +4,12 @@
 
 namespace CSP {
 
-Scenario::CSPCoherencyCheckerInterface*ExecutionPolicyFactory::make(Scenario::ScenarioModel& scenario,
-                                                          const QVector<Id<Scenario::TimeNodeModel> >& positionnedElements)
+Scenario::CSPCoherencyCheckerInterface*ExecutionPolicyFactory::make(
+        Scenario::ScenarioModel& scenario,
+        const iscore::ApplicationContext& ctx,
+        Scenario::ElementsProperties& elementsProperties)
 {
-    return new CSP::ExecutionPolicy{scenario, positionnedElements};
+    return new CSP::ExecutionPolicy{scenario, elementsProperties.timenodes.keys().toVector()};
 }
 
 }

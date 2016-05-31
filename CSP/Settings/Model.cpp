@@ -35,7 +35,7 @@ void Model::setMode(Mode mode)
 
     QSettings s;
     s.setValue(Keys::mode, static_cast<int>(m_mode));
-    emit modeChanged(mode);
+    emit ModeChanged(mode);
 }
 
 void Model::setFirstTimeSettings()

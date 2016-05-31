@@ -19,7 +19,7 @@ class Model :
         public iscore::SettingsDelegateModelInterface
 {
         Q_OBJECT
-        Q_PROPERTY(Mode mode READ getMode WRITE setMode NOTIFY modeChanged)
+        Q_PROPERTY(Mode mode READ getMode WRITE setMode NOTIFY ModeChanged)
 
     public:
         Model();
@@ -28,7 +28,7 @@ class Model :
         void setMode(Mode getMode);
 
     signals:
-        void modeChanged(Mode getMode);
+        void ModeChanged(Mode getMode);
 
     private:
         void setFirstTimeSettings() override;

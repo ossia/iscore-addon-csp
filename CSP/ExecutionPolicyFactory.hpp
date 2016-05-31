@@ -10,6 +10,7 @@ class ExecutionPolicyFactory  final : public Scenario::CoherencyCheckerFactoryIn
     public:
              virtual Scenario::CSPCoherencyCheckerInterface* make(
                          Scenario::ScenarioModel& scenario,
-                         const QVector<Id<Scenario::TimeNodeModel>>& positionnedElements) override;
+                         const iscore::ApplicationContext& ctx,
+                         Scenario::ElementsProperties& elementsProperties) override;
 };
 }

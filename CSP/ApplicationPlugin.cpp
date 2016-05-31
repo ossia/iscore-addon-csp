@@ -8,8 +8,8 @@
 
 namespace CSP
 {
-ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& pres) :
-    iscore::GUIApplicationContextPlugin {pres, "CSPApplicationPlugin", nullptr}
+ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& pres) :
+    iscore::GUIApplicationContextPlugin {pres}
 {
 }
 
@@ -18,7 +18,7 @@ ApplicationPlugin::on_newDocument(iscore::Document* document)
 {
     if(document)
     {
-        document->model().addPluginModel(new DocumentPlugin{*document, &document->model()});
+        document->model().addPluginModel(new DocumentPlugin{document->context(), &document->model()});
     }
 }
 

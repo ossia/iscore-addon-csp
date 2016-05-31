@@ -12,9 +12,9 @@ class MoveEventCSPFactory : public Scenario::Command::MoveEventFactoryInterface
         ISCORE_CONCRETE_FACTORY_DECL("29b0eb02-9dbb-476a-a8e4-866702c6db2f")
     public:
         Scenario::Command::SerializableMoveEvent* make(
-                Path<Scenario::ScenarioModel> &&scenarioPath,
-                const Id<Scenario::EventModel> &eventId,
-                const TimeValue &newDate,
+                Path<Scenario::ScenarioModel>&& scenarioPath,
+                Id<Scenario::EventModel> eventId,
+                TimeValue newDate,
                 ExpandMode mode) override;
 
         Scenario::Command::SerializableMoveEvent* make() override;

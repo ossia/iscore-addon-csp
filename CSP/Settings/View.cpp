@@ -1,6 +1,7 @@
 #include "View.hpp"
 #include <QComboBox>
 #include <QFormLayout>
+#include <iscore/widgets/SignalUtils.hpp>
 
 Q_DECLARE_METATYPE(CSP::Settings::Mode)
 
