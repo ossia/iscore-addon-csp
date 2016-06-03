@@ -1,5 +1,5 @@
 #pragma once
-#include <iscore/plugins/settingsdelegate/SettingsDelegateModelInterface.hpp>
+#include <iscore/plugins/settingsdelegate/SettingsDelegateModel.hpp>
 
 
 namespace CSP
@@ -16,13 +16,13 @@ struct Keys
         static const QString mode;
 };
 class Model :
-        public iscore::SettingsDelegateModelInterface
+        public iscore::SettingsDelegateModel
 {
         Q_OBJECT
         Q_PROPERTY(Mode mode READ getMode WRITE setMode NOTIFY ModeChanged)
 
     public:
-        Model();
+        Model(const iscore::ApplicationContext&);
 
         Mode getMode() const;
         void setMode(Mode getMode);

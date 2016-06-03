@@ -9,7 +9,7 @@ namespace Settings
 const QString Keys::mode = QStringLiteral("iscore_plugin_csp/Mode");
 
 
-Model::Model()
+Model::Model(const iscore::ApplicationContext&)
 {
     QSettings s;
 

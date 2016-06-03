@@ -1,5 +1,5 @@
 #pragma once
-#include <iscore/plugins/settingsdelegate/SettingsDelegateViewInterface.hpp>
+#include <iscore/plugins/settingsdelegate/SettingsDelegateView.hpp>
 #include <CSP/Settings/Model.hpp>
 
 class QComboBox;
@@ -9,7 +9,7 @@ namespace Settings
 {
 
 class View :
-        public iscore::SettingsDelegateViewInterface
+        public iscore::SettingsDelegateView
 {
         Q_OBJECT
     public:
